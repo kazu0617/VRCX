@@ -962,6 +962,12 @@ CefSharp.BindObjectAsync(
         if (tags.includes('admin_moderator')) {
             ref.$isModerator = true;
         }
+        if (tags.includes('system_early_adopter')) {
+            ref.$isEarlyAdopter = true;
+        }
+        if (tags.includes('system_supporter')) {
+            ref.$isSupporter = true;
+        }
         if (tags.includes('system_troll') ||
             tags.includes('system_probable_troll')) {
             ref.$isTroll = true;
@@ -1055,6 +1061,8 @@ CefSharp.BindObjectAsync(
                 // VRCX
                 $homeLocation: {},
                 $isModerator: false,
+                $isEarlyAdopter: false,
+                $isSupporter: false,
                 $isTroll: false,
                 $trustLevel: 'Visitor',
                 $trustClass: 'x-tag-untrusted',
@@ -1146,6 +1154,8 @@ CefSharp.BindObjectAsync(
                 $location: {},
                 $location_at: Date.now(),
                 $isModerator: false,
+                $isEarlyAdopter: false,
+                $isSupporter: false,
                 $isTroll: false,
                 $trustLevel: 'Visitor',
                 $trustClass: 'x-tag-untrusted',
@@ -2520,6 +2530,7 @@ CefSharp.BindObjectAsync(
                 });
             }
         }
+
     };
 
     API.refreshFavorites = function () {
@@ -3738,8 +3749,8 @@ CefSharp.BindObjectAsync(
         $app.pendingActiveFriends.clear();
         $app.friendsNo = 0;
         $app.isFriendsGroup0 = true;
-        $app.isFriendsGroup1 = true;
-        $app.isFriendsGroup2 = true;
+        $app.isFriendsGroup1 = false;
+        $app.isFriendsGroup2 = false;
         $app.isFriendsGroup3 = false;
         $app.friendsGroup0_ = [];
         $app.friendsGroup1_ = [];

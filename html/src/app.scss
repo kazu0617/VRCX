@@ -481,9 +481,18 @@ i.x-user-status.busy {
     color: rgb(181, 38, 38);
 }
 
+.x-friend-item > .detail > .name.x-tag-support {
+    color: rgb(249, 255, 0);
+}
+
 .el-tag.x-tag-vip {
     color: rgb(181, 38, 38);
     border-color: rgb(181, 38, 38);
+}
+
+.el-tag.x-tag-support {
+    color: rgb(249, 255, 0);
+    border-color: rgb(249, 255, 0);
 }
 
 .x-friend-item > .detail > .name.x-tag-troll {
