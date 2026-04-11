@@ -120,8 +120,7 @@ export function createOverlayDispatch({
                 10
             ) / 1000
         );
-        const text = toNotificationText(result.title, result.body, noty.type);
-        AppApi.WayVRNotification('VRCX', text, timeout, image);
+        AppApi.WayVRNotification(result.title, result.body, timeout, image);
     }
 
     /**

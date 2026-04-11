@@ -292,12 +292,11 @@ describe('displayWayVRNotification', () => {
         dispatch = createOverlayDispatch(deps);
     });
 
-    test('calls WayVRNotification with formatted text', () => {
+    test('calls WayVRNotification with title and body', () => {
         getNotificationMessage.mockReturnValue({
-            title: 'Title',
-            body: 'Body'
+            title: 'Friend Online',
+            body: 'Alice is online'
         });
-        toNotificationText.mockReturnValue('Title: Body');
 
         dispatch.displayWayVRNotification(
             { type: 'friendOnline' },
@@ -305,14 +304,9 @@ describe('displayWayVRNotification', () => {
             'img'
         );
 
-        expect(toNotificationText).toHaveBeenCalledWith(
-            'Title',
-            'Body',
-            'friendOnline'
-        );
         expect(AppApi.WayVRNotification).toHaveBeenCalledWith(
-            'VRCX',
-            'Title: Body',
+            'Friend Online',
+            'Alice is online',
             5, // 5000ms / 1000
             'img'
         );
