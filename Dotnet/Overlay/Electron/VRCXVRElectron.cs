@@ -209,9 +209,16 @@ namespace VRCX
                         nextInit = DateTime.UtcNow.AddSeconds(5);
                         if (system == null)
                         {
+                            if (_err != EVRInitError.None)
+                            {
+                                logger.Warn("OpenVR init failed: {0}. If using Monado or WiVRn, ensure OpenComposite is installed for OpenVR compatibility.", _err);
+                                // Back off more aggressively after repeated failures to reduce CPU usage
+                                nextInit = DateTime.UtcNow.AddSeconds(30);
+                            }
                             continue;
                         }
 
+                        logger.Info("OpenVR initialized successfully");
                         active = true;
                         SetupTextures();
                         _isOverlayStarted = true;

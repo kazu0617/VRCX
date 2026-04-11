@@ -963,6 +963,7 @@
                     "steamvr_notifications": {
                         "header": "SteamVR の通知",
                         "steamvr_overlay": "SteamVR オーバーレイ",
+                        "vr_overlay": "VR オーバーレイ",
                         "overlay_notifications": "通知オーバーレイ",
                         "notification_position": "通知の位置",
                         "xsoverlay_notifications": "XSOverlay で通知する",
@@ -1006,6 +1007,7 @@
                     "grip": "グリップ: Vive コントローラー等での「グラブ」、Oculus コントローラー等での「X/Aボタン」",
                     "menu": "メニュー: Vive コントローラーでの「メニューボタン」、Index コントローラーでの「Bボタン」、Oculus コントローラーでの「Y/Bボタン」",
                     "steamvr_overlay": "SteamVR オーバーレイ",
+                    "vr_runtime": "VR ランタイム",
                     "wrist_feed_overlay": "手首のフィードオーバーレイ",
                     "hide_private_worlds": "プライベートワールドを表示しない",
                     "start_overlay_with": "オーバーレイの起動タイミング",

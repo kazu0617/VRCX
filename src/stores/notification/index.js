@@ -883,10 +883,19 @@ export const useNotificationStore = defineStore('Notification', () => {
         const playOverlayNotification =
             notificationsSettingsStore.overlayNotifications && playOverlayToast;
         const playXSNotification =
-            notificationsSettingsStore.xsNotifications && playOverlayToast;
+            !LINUX &&
+            notificationsSettingsStore.xsNotifications &&
+            playOverlayToast;
+        const playWayVRNotification =
+            LINUX &&
+            notificationsSettingsStore.xsNotifications &&
+            playOverlayToast;
         const playOvrtHudNotifications =
-            notificationsSettingsStore.ovrtHudNotifications && playOverlayToast;
+            !LINUX &&
+            notificationsSettingsStore.ovrtHudNotifications &&
+            playOverlayToast;
         const playOvrtWristNotifications =
+            !LINUX &&
             notificationsSettingsStore.ovrtWristNotifications &&
             playOverlayToast;
 
@@ -915,6 +924,7 @@ export const useNotificationStore = defineStore('Notification', () => {
         if (
             playDesktopToast ||
             playXSNotification ||
+            playWayVRNotification ||
             playOvrtHudNotifications ||
             playOvrtWristNotifications ||
             playOverlayNotification
@@ -923,6 +933,9 @@ export const useNotificationStore = defineStore('Notification', () => {
                 notySaveImage(noty).then((image) => {
                     if (playXSNotification) {
                         displayXSNotification(noty, message, image);
+                    }
+                    if (playWayVRNotification) {
+                        displayWayVRNotification(noty, message, image);
                     }
                     if (
                         playOvrtHudNotifications ||
@@ -946,6 +959,9 @@ export const useNotificationStore = defineStore('Notification', () => {
             } else {
                 if (playXSNotification) {
                     displayXSNotification(noty, message, '');
+                }
+                if (playWayVRNotification) {
+                    displayWayVRNotification(noty, message, '');
                 }
                 if (playOvrtHudNotifications || playOvrtWristNotifications) {
                     displayOvrtNotification(
@@ -995,6 +1011,7 @@ export const useNotificationStore = defineStore('Notification', () => {
         displayDesktopToast,
         displayOverlayNotification,
         displayXSNotification,
+        displayWayVRNotification,
         displayOvrtNotification
     } = createOverlayDispatch({
         getUserIdFromNoty,

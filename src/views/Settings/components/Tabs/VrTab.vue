@@ -2,7 +2,9 @@
     <div class="flex flex-col gap-10 py-2">
         <!-- VR Core -->
         <SettingsGroup :title="t('view.settings.vr.vr_core.header')">
-            <SettingsItem :label="t('view.settings.notifications.notifications.steamvr_notifications.steamvr_overlay')">
+            <SettingsItem :label="isLinux
+                ? t('view.settings.notifications.notifications.steamvr_notifications.vr_overlay')
+                : t('view.settings.notifications.notifications.steamvr_notifications.steamvr_overlay')">
                 <Switch
                     :model-value="openVR"
                     @update:modelValue="
@@ -21,7 +23,7 @@
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="false">{{ 'VRChat' }}</SelectItem>
-                        <SelectItem value="true">{{ 'SteamVR' }}</SelectItem>
+                        <SelectItem value="true">{{ isLinux ? t('view.settings.wrist_overlay.steamvr_wrist_overlay.vr_runtime') : 'SteamVR' }}</SelectItem>
                     </SelectContent>
                 </Select>
             </SettingsItem>

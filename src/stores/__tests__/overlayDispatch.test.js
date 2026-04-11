@@ -279,3 +279,50 @@ describe('displayXSNotification', () => {
         expect(AppApi.XSNotification).not.toHaveBeenCalled();
     });
 });
+
+// ─── displayWayVRNotification ──────────────────────────────────────
+
+describe('displayWayVRNotification', () => {
+    let deps, dispatch;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        globalThis.AppApi = { WayVRNotification: vi.fn() };
+        deps = makeDeps();
+        dispatch = createOverlayDispatch(deps);
+    });
+
+    test('calls WayVRNotification with formatted text', () => {
+        getNotificationMessage.mockReturnValue({
+            title: 'Title',
+            body: 'Body'
+        });
+        toNotificationText.mockReturnValue('Title: Body');
+
+        dispatch.displayWayVRNotification(
+            { type: 'friendOnline' },
+            'msg',
+            'img'
+        );
+
+        expect(toNotificationText).toHaveBeenCalledWith(
+            'Title',
+            'Body',
+            'friendOnline'
+        );
+        expect(AppApi.WayVRNotification).toHaveBeenCalledWith(
+            'VRCX',
+            'Title: Body',
+            5, // 5000ms / 1000
+            'img'
+        );
+    });
+
+    test('does nothing when getNotificationMessage returns null', () => {
+        getNotificationMessage.mockReturnValue(null);
+
+        dispatch.displayWayVRNotification({}, 'msg', 'img');
+
+        expect(AppApi.WayVRNotification).not.toHaveBeenCalled();
+    });
+});

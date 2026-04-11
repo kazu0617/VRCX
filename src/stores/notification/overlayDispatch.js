@@ -106,6 +106,25 @@ export function createOverlayDispatch({
     }
 
     /**
+     * Sends a notification via notify-send for Linux VR environments (WayVR, etc.).
+     * @param {any} noty
+     * @param {string} message
+     * @param {string} image
+     */
+    function displayWayVRNotification(noty, message, image) {
+        const result = getNotificationMessage(noty, message);
+        if (!result) return;
+        const timeout = Math.floor(
+            parseInt(
+                notificationsSettingsStore.notificationTimeout.toString(),
+                10
+            ) / 1000
+        );
+        const text = toNotificationText(result.title, result.body, noty.type);
+        AppApi.WayVRNotification('VRCX', text, timeout, image);
+    }
+
+    /**
      *
      * @param playOvrtHudNotifications
      * @param playOvrtWristNotifications
@@ -205,6 +224,7 @@ export function createOverlayDispatch({
         displayDesktopToast,
         displayOverlayNotification,
         displayXSNotification,
+        displayWayVRNotification,
         displayOvrtNotification,
         notyGetImage,
         desktopNotification
