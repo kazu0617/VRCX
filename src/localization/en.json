@@ -979,7 +979,7 @@
                     "steamvr_notifications": {
                         "header": "SteamVR Notifications",
                         "steamvr_overlay": "SteamVR Overlay",
-                        "vr_overlay": "VR Overlay",
+                        "vr_overlay": "OpenVR Overlay",
                         "overlay_notifications": "Overlay Notifications",
                         "notification_position": "Notification Position",
                         "xsoverlay_notifications": "XSOverlay Notifications",
@@ -1024,7 +1024,7 @@
                     "grip": "Grip: Vive or Other Controllers Grab, Oculus X/A Buttons",
                     "menu": "Menu: Vive Menu, Index B, Oculus Y/B Buttons",
                     "steamvr_overlay": "SteamVR Overlay",
-                    "vr_runtime": "VR Runtime",
+                    "vr_runtime": "OpenVR Runtime",
                     "wrist_feed_overlay": "Wrist Feed Overlay",
                     "hide_private_worlds": "Hide Private Worlds",
                     "start_overlay_with": "Start Overlay With",
