@@ -1,0 +1,144 @@
+# Maintainer: kazu0617
+
+# Change to a versioned electron package (e.g. electron33) if needed
+_electron=electron
+
+pkgname=vrcx-electron
+pkgver=2026.02.11
+pkgrel=1
+pkgdesc='Friendship management tool for VRChat (system Electron)'
+arch=('x86_64')
+url='https://github.com/vrcx-team/VRCX'
+license=('MIT')
+depends=(
+    'dotnet-runtime-9.0'
+    "${_electron}"
+)
+makedepends=(
+    'dotnet-sdk-9.0'
+    'nodejs>=24'
+    'npm>=11'
+)
+optdepends=(
+    'libappindicator-gtk3: system tray support'
+    'xdg-utils: default browser and URL handling'
+)
+provides=('vrcx')
+conflicts=('vrcx')
+options=('!strip' '!debug')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/vrcx-team/VRCX/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+prepare() {
+    cd "VRCX-${pkgver}"
+
+    # Patches for system Electron compatibility can be applied here.
+    # Electron 40.5.0+ may require additional patches for node-api-dotnet
+    # or other native module compatibility.
+    # Example:
+    #   patch -Np1 -i "${srcdir}/fix-electron-compat.patch"
+}
+
+build() {
+    cd "VRCX-${pkgver}"
+
+    export npm_config_cache="${srcdir}/npm-cache"
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1
+    export DOTNET_NOLOGO=1
+
+    # Install Node.js dependencies (all, including devDependencies for build)
+    npm ci
+
+    # Build frontend
+    npm run prod-linux
+
+    # Build .NET backend
+    dotnet build Dotnet/VRCX-Electron.csproj \
+        -p:Configuration=Release \
+        -p:WarningLevel=0 \
+        -p:Platform=x64 \
+        -p:PlatformTarget=x64 \
+        -p:RestorePackagesConfig=true \
+        -t:"Restore;Clean;Build" \
+        -m -a x64
+
+    # Install production-only Node.js dependencies for packaging
+    cd "${srcdir}"
+    mkdir -p prod-modules
+    cp "VRCX-${pkgver}/package.json" prod-modules/
+    cp "VRCX-${pkgver}/package-lock.json" prod-modules/
+    cd prod-modules
+    npm ci --omit=dev
+}
+
+package() {
+    cd "VRCX-${pkgver}"
+
+    local _installdir="/usr/lib/vrcx-electron"
+
+    install -dm755 "${pkgdir}${_installdir}"
+
+    # Install package.json (Electron uses "main" field to find entry point)
+    install -Dm644 package.json "${pkgdir}${_installdir}/package.json"
+
+    # Install built frontend
+    cp -r build/html "${pkgdir}${_installdir}/build/html"
+
+    # Install .NET assemblies (excluding debug symbols and bundled runtime)
+    cp -r build/Electron "${pkgdir}${_installdir}/build/Electron"
+    find "${pkgdir}${_installdir}/build/Electron" -name '*.pdb' -delete
+    rm -rf "${pkgdir}${_installdir}/build/Electron/dotnet-runtime"
+
+    # Install Electron main process files
+    install -dm755 "${pkgdir}${_installdir}/src-electron"
+    install -Dm644 src-electron/main.js "${pkgdir}${_installdir}/src-electron/main.js"
+    install -Dm644 src-electron/preload.js "${pkgdir}${_installdir}/src-electron/preload.js"
+    install -Dm644 src-electron/InteropApi.js "${pkgdir}${_installdir}/src-electron/InteropApi.js"
+    install -Dm644 src-electron/offscreen-preload.js "${pkgdir}${_installdir}/src-electron/offscreen-preload.js"
+    install -Dm644 src-electron/offscreen.html "${pkgdir}${_installdir}/src-electron/offscreen.html"
+    install -dm755 "${pkgdir}${_installdir}/src-electron/libs/linux"
+    install -Dm755 src-electron/libs/linux/libopenvr_api.so \
+        "${pkgdir}${_installdir}/src-electron/libs/linux/libopenvr_api.so"
+
+    # Install production node_modules (hazardous, node-api-dotnet)
+    cp -r "${srcdir}/prod-modules/node_modules" "${pkgdir}${_installdir}/node_modules"
+
+    # Install images
+    install -dm755 "${pkgdir}${_installdir}/images"
+    install -Dm644 images/VRCX.png "${pkgdir}${_installdir}/images/VRCX.png"
+    install -Dm644 images/VRCX.ico "${pkgdir}${_installdir}/images/VRCX.ico"
+    install -Dm644 images/VRCX_notify.png "${pkgdir}${_installdir}/images/VRCX_notify.png"
+    install -Dm644 images/VRCX_notify.ico "${pkgdir}${_installdir}/images/VRCX_notify.ico"
+
+    # Install Version file
+    install -Dm644 Version "${pkgdir}${_installdir}/Version"
+
+    # Disable auto-updater (updates managed by pacman)
+    touch "${pkgdir}${_installdir}/.no-updater"
+
+    # Launcher script
+    install -Dm755 /dev/stdin "${pkgdir}/usr/bin/${pkgname}" <<END
+#!/bin/bash
+exec ${_electron} --ozone-platform-hint=auto /usr/lib/vrcx-electron "\$@"
+END
+
+    # Desktop entry
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/${pkgname}.desktop" <<END
+[Desktop Entry]
+Name=VRCX
+Comment=Friendship management tool for VRChat
+Exec=${pkgname} %U
+Icon=vrcx
+Type=Application
+Categories=Network;InstantMessaging;Game;
+Terminal=false
+StartupWMClass=VRCX
+MimeType=x-scheme-handler/vrcx;
+END
+
+    # Icon
+    install -Dm644 images/VRCX.png "${pkgdir}/usr/share/pixmaps/vrcx.png"
+
+    # License
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

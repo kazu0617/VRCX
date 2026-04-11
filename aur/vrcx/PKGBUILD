@@ -1,0 +1,100 @@
+# Maintainer: kazu0617
+
+pkgname=vrcx
+pkgver=2026.02.11
+pkgrel=1
+pkgdesc='Friendship management tool for VRChat'
+arch=('x86_64')
+url='https://github.com/vrcx-team/VRCX'
+license=('MIT')
+depends=(
+    'alsa-lib'
+    'gtk3'
+    'libdrm'
+    'libnotify'
+    'libxkbcommon'
+    'libxss'
+    'mesa'
+    'nss'
+)
+makedepends=(
+    'dotnet-sdk-9.0'
+    'nodejs>=24'
+    'npm>=11'
+)
+optdepends=(
+    'libappindicator-gtk3: system tray support'
+    'xdg-utils: default browser and URL handling'
+)
+conflicts=('vrcx-electron')
+options=('!strip' '!debug')
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/vrcx-team/VRCX/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "VRCX-${pkgver}"
+
+    export npm_config_cache="${srcdir}/npm-cache"
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1
+    export DOTNET_NOLOGO=1
+
+    # Install Node.js dependencies
+    npm ci
+
+    # Build frontend
+    npm run prod-linux
+
+    # Build .NET backend
+    dotnet build Dotnet/VRCX-Electron.csproj \
+        -p:Configuration=Release \
+        -p:WarningLevel=0 \
+        -p:Platform=x64 \
+        -p:PlatformTarget=x64 \
+        -p:RestorePackagesConfig=true \
+        -t:"Restore;Clean;Build" \
+        -m -a x64
+
+    # Download bundled .NET runtime
+    node src-electron/download-dotnet-runtime.js --arch=x64
+
+    # Set version in package.json for electron-builder
+    node src-electron/patch-package-version.js
+
+    # Build unpacked Electron app (--dir skips AppImage creation)
+    npx electron-builder --x64 --publish never --dir
+
+    # Patch node-api-dotnet for asar archive paths
+    node src-electron/patch-node-api-dotnet.js --arch=x64
+}
+
+package() {
+    cd "VRCX-${pkgver}"
+
+    # Install app to /opt/vrcx
+    install -dm755 "${pkgdir}/opt/vrcx"
+    cp -r build/linux-unpacked/* "${pkgdir}/opt/vrcx/"
+
+    # Launcher symlink
+    install -dm755 "${pkgdir}/usr/bin"
+    ln -s /opt/vrcx/vrcx "${pkgdir}/usr/bin/vrcx"
+
+    # Desktop entry
+    install -Dm644 /dev/stdin "${pkgdir}/usr/share/applications/vrcx.desktop" <<END
+[Desktop Entry]
+Name=VRCX
+Comment=Friendship management tool for VRChat
+Exec=vrcx --ozone-platform-hint=auto %U
+Icon=vrcx
+Type=Application
+Categories=Network;InstantMessaging;Game;
+Terminal=false
+StartupWMClass=VRCX
+MimeType=x-scheme-handler/vrcx;
+END
+
+    # Icon
+    install -Dm644 images/VRCX.png "${pkgdir}/usr/share/pixmaps/vrcx.png"
+
+    # License
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

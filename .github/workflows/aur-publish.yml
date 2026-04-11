@@ -1,0 +1,54 @@
+name: Publish to AUR
+
+on:
+    release:
+        types: [published]
+    workflow_dispatch:
+        inputs:
+            version:
+                description: 'Version to publish (e.g., 2026.02.11)'
+                required: true
+
+# Required secrets:
+#   AUR_SSH_PRIVATE_KEY - SSH private key registered on AUR
+#   AUR_USERNAME        - AUR account username (for git commit author)
+#   AUR_EMAIL           - Email associated with AUR account
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                package: [vrcx, vrcx-electron]
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Determine version
+              id: version
+              run: |
+                  if [ "${{ github.event_name }}" = "release" ]; then
+                    VERSION="${{ github.event.release.tag_name }}"
+                  else
+                    VERSION="${{ inputs.version }}"
+                  fi
+                  # Strip leading 'v' if present
+                  VERSION="${VERSION#v}"
+                  echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+            - name: Update PKGBUILD version
+              run: |
+                  VERSION="${{ steps.version.outputs.version }}"
+                  sed -i "s/^pkgver=.*/pkgver=${VERSION}/" "aur/${{ matrix.package }}/PKGBUILD"
+                  sed -i "s/^pkgrel=.*/pkgrel=1/" "aur/${{ matrix.package }}/PKGBUILD"
+
+            - name: Publish ${{ matrix.package }} to AUR
+              uses: KSXGitHub/github-actions-deploy-aur@v3
+              with:
+                  pkgname: ${{ matrix.package }}
+                  pkgbuild: aur/${{ matrix.package }}/PKGBUILD
+                  commit_username: ${{ secrets.AUR_USERNAME }}
+                  commit_email: ${{ secrets.AUR_EMAIL }}
+                  ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+                  commit_message: "Update to ${{ steps.version.outputs.version }}"
+                  updpkgsums: true
