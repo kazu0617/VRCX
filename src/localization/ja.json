@@ -1003,6 +1003,7 @@
             "wrist_overlay": {
                 "steamvr_wrist_overlay": {
                     "header": "SteamVR 手首オーバーレイ",
+                    "header_openvr": "OpenVR 手首オーバーレイ",
                     "description": "VRChat が起動しているときに自動的に動作します。",
                     "grip": "グリップ: Vive コントローラー等での「グラブ」、Oculus コントローラー等での「X/Aボタン」",
                     "menu": "メニュー: Vive コントローラーでの「メニューボタン」、Index コントローラーでの「Bボタン」、Oculus コントローラーでの「Y/Bボタン」",
@@ -3096,8 +3097,11 @@
         "servers_ok": "VRChat サーバーは正常に動作しています",
         "servers_issue": "VRChat サーバーに問題が発生しています",
         "steamvr": "SteamVR",
+        "openvr": "OpenVR",
         "steamvr_running": "SteamVR は実行中です",
         "steamvr_stopped": "SteamVR は実行されていません",
+        "openvr_running": "OpenVR ランタイムは実行中です",
+        "openvr_stopped": "OpenVR ランタイムは実行されていません",
         "proxy": "プロキシ",
         "ws_connected": "接続済み",
         "ws_disconnected": "未接続",
