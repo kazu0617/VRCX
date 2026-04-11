@@ -762,6 +762,11 @@ export const useVrcxStore = defineStore('Vrcx', () => {
      *
      */
     async function checkAutoBackupRestoreVrcRegistry() {
+        // Windows registry backup/restore is not applicable on Linux
+        if (LINUX) {
+            return;
+        }
+
         if (
             !advancedSettingsStore.vrcRegistryAutoBackup ||
             !advancedSettingsStore.vrcRegistryAskRestore
@@ -814,7 +819,7 @@ export const useVrcxStore = defineStore('Vrcx', () => {
      *
      */
     async function tryAutoBackupVrcRegistry() {
-        if (!advancedSettingsStore.vrcRegistryAutoBackup) {
+        if (LINUX || !advancedSettingsStore.vrcRegistryAutoBackup) {
             return;
         }
         const date = new Date();

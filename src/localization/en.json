@@ -979,6 +979,7 @@
                     "steamvr_notifications": {
                         "header": "SteamVR Notifications",
                         "steamvr_overlay": "SteamVR Overlay",
+                        "vr_overlay": "OpenVR Overlay",
                         "overlay_notifications": "Overlay Notifications",
                         "notification_position": "Notification Position",
                         "xsoverlay_notifications": "XSOverlay Notifications",
@@ -1018,10 +1019,12 @@
             "wrist_overlay": {
                 "steamvr_wrist_overlay": {
                     "header": "SteamVR Wrist Overlay",
+                    "header_openvr": "OpenVR Wrist Overlay",
                     "description": "* Runs automatically while VRChat is running.",
                     "grip": "Grip: Vive or Other Controllers Grab, Oculus X/A Buttons",
                     "menu": "Menu: Vive Menu, Index B, Oculus Y/B Buttons",
                     "steamvr_overlay": "SteamVR Overlay",
+                    "vr_runtime": "OpenVR Runtime",
                     "wrist_feed_overlay": "Wrist Feed Overlay",
                     "hide_private_worlds": "Hide Private Worlds",
                     "start_overlay_with": "Start Overlay With",
@@ -3111,8 +3114,11 @@
         "servers_ok": "VRChat servers are operational",
         "servers_issue": "VRChat Server Issues",
         "steamvr": "SteamVR",
+        "openvr": "OpenVR",
         "steamvr_running": "SteamVR is running",
         "steamvr_stopped": "SteamVR is not running",
+        "openvr_running": "OpenVR runtime is running",
+        "openvr_stopped": "OpenVR runtime is not running",
         "proxy": "Proxy",
         "ws_connected": "Connected",
         "ws_disconnected": "Disconnected",

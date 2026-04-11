@@ -37,8 +37,8 @@
                             v-if="!isMacOS && visibility.steamvr"
                             :content="
                                 gameStore.isSteamVRRunning
-                                    ? t('status_bar.steamvr_running')
-                                    : t('status_bar.steamvr_stopped')
+                                    ? t(LINUX ? 'status_bar.openvr_running' : 'status_bar.steamvr_running')
+                                    : t(LINUX ? 'status_bar.openvr_stopped' : 'status_bar.steamvr_stopped')
                             "
                             side="top">
                             <div class="flex items-center gap-1 px-2 h-[22px] whitespace-nowrap border-r border-border">
@@ -47,7 +47,7 @@
                                     :class="
                                         gameStore.isSteamVRRunning ? 'bg-status-online' : 'bg-status-offline-alt'
                                     " />
-                                <span class="text-foreground text-[11px]">{{ t('status_bar.steamvr') }}</span>
+                                <span class="text-foreground text-[11px]">{{ t(LINUX ? 'status_bar.openvr' : 'status_bar.steamvr') }}</span>
                             </div>
                         </TooltipWrapper>
 
@@ -276,7 +276,7 @@
                     :model-value="visibility.steamvr"
                     @select.prevent
                     @update:model-value="toggleVisibility('steamvr')">
-                    {{ t('status_bar.steamvr') }}
+                    {{ t(LINUX ? 'status_bar.openvr' : 'status_bar.steamvr') }}
                 </ContextMenuCheckboxItem>
                 <ContextMenuCheckboxItem
                     :model-value="visibility.proxy"
