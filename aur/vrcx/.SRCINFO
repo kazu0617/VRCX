@@ -1,0 +1,27 @@
+pkgbase = vrcx
+	pkgdesc = Friendship management tool for VRChat
+	pkgver = 2026.02.11
+	pkgrel = 1
+	url = https://github.com/vrcx-team/VRCX
+	arch = x86_64
+	license = MIT
+	makedepends = dotnet-sdk-9.0
+	makedepends = nodejs>=24
+	makedepends = npm>=11
+	depends = alsa-lib
+	depends = gtk3
+	depends = libdrm
+	depends = libnotify
+	depends = libxkbcommon
+	depends = libxss
+	depends = mesa
+	depends = nss
+	optdepends = libappindicator-gtk3: system tray support
+	optdepends = xdg-utils: default browser and URL handling
+	conflicts = vrcx-electron
+	options = !strip
+	options = !debug
+	source = vrcx-2026.02.11.tar.gz::https://github.com/vrcx-team/VRCX/archive/refs/tags/2026.02.11.tar.gz
+	sha256sums = SKIP
+
+pkgname = vrcx
