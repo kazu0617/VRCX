@@ -1,0 +1,131 @@
+openapi: 3.0.3
+info:
+  title: VRCX App API
+  description: |
+    VRCX アプリケーション自体の API (api0.vrcx.app)。
+    リリース情報の取得やエラーレポート用DSN取得に使用される。
+  version: "1.0.0"
+
+servers:
+  - url: https://api0.vrcx.app
+    description: VRCX App API Server
+
+paths:
+  /releases/stable:
+    get:
+      operationId: getStableReleases
+      summary: 安定版リリース一覧を取得
+      description: VRCX の安定版リリース一覧を取得する。
+      tags:
+        - Releases
+      responses:
+        "200":
+          description: リリース一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Release"
+
+  /releases/stable/latest:
+    get:
+      operationId: getLatestStableRelease
+      summary: 最新安定版リリースを取得
+      description: VRCX の最新の安定版リリース情報を取得する。
+      tags:
+        - Releases
+      responses:
+        "200":
+          description: 最新リリース情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Release"
+
+  /releases/nightly:
+    get:
+      operationId: getNightlyReleases
+      summary: ナイトリーリリース一覧を取得
+      description: VRCX のナイトリーリリース一覧を取得する。
+      tags:
+        - Releases
+      responses:
+        "200":
+          description: リリース一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Release"
+
+  /releases/nightly/latest:
+    get:
+      operationId: getLatestNightlyRelease
+      summary: 最新ナイトリーリリースを取得
+      description: VRCX の最新のナイトリーリリース情報を取得する。
+      tags:
+        - Releases
+      responses:
+        "200":
+          description: 最新リリース情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Release"
+
+  /errorreporting/getdsn:
+    get:
+      operationId: getErrorReportingDSN
+      summary: エラーレポート用DSNを取得
+      description: Sentry エラーレポート用の DSN (Data Source Name) を取得する。
+      tags:
+        - Error Reporting
+      parameters:
+        - name: Referer
+          in: header
+          required: true
+          schema:
+            type: string
+            default: "https://vrcx.app"
+          description: リファラーヘッダー
+        - name: X-VRCX-ID
+          in: header
+          schema:
+            type: string
+          description: VRCX インスタンスID
+      responses:
+        "200":
+          description: DSN情報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dsn:
+                    type: string
+                    description: Sentry DSN URL
+
+components:
+  schemas:
+    Release:
+      type: object
+      description: VRCX リリース情報
+      properties:
+        version:
+          type: string
+          description: バージョン番号
+        name:
+          type: string
+          description: リリース名
+        publishedAt:
+          type: string
+          format: date-time
+          description: 公開日時
+        downloadUrl:
+          type: string
+          description: ダウンロードURL
+        changelog:
+          type: string
+          description: 変更履歴

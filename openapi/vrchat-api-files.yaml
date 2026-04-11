@@ -1,0 +1,429 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Files
+  description: |
+    VRChat API のファイル関連エンドポイント。
+    ファイル情報の取得、画像アップロード、ファイルバージョン管理、
+    アップロード開始・完了、ファイル一覧を含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /file/{fileId}:
+    get:
+      operationId: getFile
+      summary: ファイル情報を取得
+      description: 指定したファイルIDのファイルメタデータを取得する。
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ファイルID (file_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+      responses:
+        "200":
+          description: ファイル情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+        "404":
+          description: ファイルが見つからない
+    post:
+      operationId: createFileVersion
+      summary: ファイルバージョンを作成
+      description: 指定したファイルに新しいバージョンを作成する。
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                signatureMd5:
+                  type: string
+                signatureSizeInBytes:
+                  type: integer
+                fileMd5:
+                  type: string
+                fileSizeInBytes:
+                  type: integer
+      responses:
+        "200":
+          description: 作成されたファイルバージョン
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+    delete:
+      operationId: deleteFile
+      summary: ファイルを削除
+      description: 指定したファイルを削除する。
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+
+  /file/{fileId}/{fileVersion}/file/start:
+    put:
+      operationId: startFileUpload
+      summary: ファイルアップロードを開始
+      description: 指定したファイルバージョンのファイルデータアップロードを開始する。
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fileVersion
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: アップロード開始情報（アップロードURL等）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: アップロード先URL
+
+  /file/{fileId}/{fileVersion}/file/finish:
+    put:
+      operationId: finishFileUpload
+      summary: ファイルアップロードを完了
+      description: 指定したファイルバージョンのファイルデータアップロードを完了する。
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fileVersion
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maxParts:
+                  type: integer
+                  default: 0
+                nextPartNumber:
+                  type: integer
+                  default: 0
+      responses:
+        "200":
+          description: アップロード完了
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+
+  /file/{fileId}/{fileVersion}/signature/start:
+    put:
+      operationId: startSignatureUpload
+      summary: 署名アップロードを開始
+      description: 指定したファイルバージョンの署名データアップロードを開始する。
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fileVersion
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: アップロード開始情報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+
+  /file/{fileId}/{fileVersion}/signature/finish:
+    put:
+      operationId: finishSignatureUpload
+      summary: 署名アップロードを完了
+      description: 指定したファイルバージョンの署名データアップロードを完了する。
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fileVersion
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maxParts:
+                  type: integer
+                  default: 0
+                nextPartNumber:
+                  type: integer
+                  default: 0
+      responses:
+        "200":
+          description: アップロード完了
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+
+  /files:
+    get:
+      operationId: getFiles
+      summary: ファイル一覧を取得
+      description: タグ等の条件でファイル一覧を取得する。
+      tags:
+        - Files
+      parameters:
+        - name: tag
+          in: query
+          schema:
+            type: string
+            enum: [icon, gallery, avatarimage, avatargallery, worldimage, sticker, emoji]
+          description: ファイルタグでフィルタ
+        - name: galleryId
+          in: query
+          schema:
+            type: string
+          description: ギャラリーIDでフィルタ
+        - name: n
+          in: query
+          schema:
+            type: integer
+            default: 100
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: オフセット
+      responses:
+        "200":
+          description: ファイル一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+
+  /files/order:
+    put:
+      operationId: setFileOrder
+      summary: ファイルの並び順を設定
+      description: アバターギャラリー等のファイルの並び順を設定する。
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                  description: ファイルIDの順序配列
+      responses:
+        "200":
+          description: 並び順更新成功
+
+  /file/image:
+    post:
+      operationId: uploadImage
+      summary: 画像をアップロード
+      description: |
+        画像ファイルをアップロードする。tag パラメータで用途を指定する。
+        - `icon`: VRC+アイコン
+        - `gallery`: ギャラリー画像
+        - `avatarimage`: アバター画像
+        - `avatargallery`: アバターギャラリー画像
+        - `worldimage`: ワールド画像
+        - `sticker`: ステッカー
+        - `emoji`: 絵文字
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+                - data
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: 画像データ
+                data:
+                  type: string
+                  description: |
+                    JSON形式のメタデータ。
+                    例: {"tag": "icon"} or {"tag": "avatargallery", "galleryId": "avtr_..."}
+      responses:
+        "200":
+          description: アップロード成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+
+  /analysis/{fileId}/{version}/{variant}:
+    get:
+      operationId: getFileAnalysis
+      summary: ファイル解析結果を取得
+      description: 指定したファイルバージョン・バリアントの解析結果を取得する。
+      tags:
+        - Files
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: variant
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 解析結果
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    File:
+      type: object
+      description: ファイル情報
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        ownerId:
+          type: string
+        mimeType:
+          type: string
+        extension:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        versions:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileVersion"
+
+    FileVersion:
+      type: object
+      description: ファイルバージョン情報
+      properties:
+        version:
+          type: integer
+        status:
+          type: string
+          enum: [waiting, complete, error]
+        file:
+          type: object
+          properties:
+            url:
+              type: string
+            md5:
+              type: string
+            sizeInBytes:
+              type: integer
+            status:
+              type: string
+        signature:
+          type: object
+          properties:
+            url:
+              type: string
+            md5:
+              type: string
+            sizeInBytes:
+              type: integer
+            status:
+              type: string
+        created_at:
+          type: string
+          format: date-time

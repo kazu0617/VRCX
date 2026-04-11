@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Instances
+  description: |
+    VRChat API のインスタンス関連エンドポイント。
+    インスタンスの取得・作成・クローズ、ショートネーム、セルフインバイトを含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /instances/{worldId}:{instanceId}:
+    get:
+      operationId: getInstance
+      summary: インスタンス情報を取得
+      description: 指定したワールドID・インスタンスIDのインスタンス情報を取得する。
+      tags:
+        - Instances
+      parameters:
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ワールドID
+        - name: instanceId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: インスタンスID
+      responses:
+        "200":
+          description: インスタンス情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Instance"
+        "403":
+          description: アクセス拒否
+        "404":
+          description: インスタンスが見つからない
+
+  /instances:
+    post:
+      operationId: createInstance
+      summary: インスタンスを作成
+      description: 新しいインスタンスを作成する。
+      tags:
+        - Instances
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - worldId
+              properties:
+                worldId:
+                  type: string
+                  description: ワールドID
+                type:
+                  type: string
+                  enum: [public, hidden, friends, friendsPlus, group]
+                  description: インスタンスタイプ
+                region:
+                  type: string
+                  enum: [us, use, eu, jp]
+                  description: リージョン
+                ownerId:
+                  type: string
+                  description: オーナーのユーザーID
+                groupAccessType:
+                  type: string
+                  description: グループアクセスタイプ
+                queueEnabled:
+                  type: boolean
+                  description: キュー有効化
+                roleIds:
+                  type: array
+                  items:
+                    type: string
+                  description: 許可するロールID一覧
+      responses:
+        "200":
+          description: 作成されたインスタンス情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Instance"
+
+  /instances/{worldId}:{instanceId}/shortName:
+    get:
+      operationId: getInstanceShortName
+      summary: インスタンスのショートネームを取得
+      description: インスタンスのショートネームを取得または設定する。
+      tags:
+        - Instances
+      parameters:
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: instanceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: shortName
+          in: query
+          schema:
+            type: string
+          description: 設定するショートネーム（省略時は取得のみ）
+      responses:
+        "200":
+          description: ショートネーム情報
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shortName:
+                    type: string
+                  secureName:
+                    type: string
+
+  /instances/s/{shortName}:
+    get:
+      operationId: getInstanceFromShortName
+      summary: ショートネームからインスタンスを取得
+      description: ショートネームからインスタンス情報を取得する。
+      tags:
+        - Instances
+      parameters:
+        - name: shortName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: インスタンス情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Instance"
+
+  /invite/myself/to/{worldId}:{instanceId}:
+    post:
+      operationId: selfInvite
+      summary: セルフインバイト
+      description: 自分自身をインスタンスに招待する。
+      tags:
+        - Instances
+      parameters:
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: instanceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shortName:
+                  type: string
+                  description: インスタンスのショートネーム（オプション）
+      responses:
+        "200":
+          description: インバイト成功
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: アクセス拒否
+
+  /instances/{location}:
+    delete:
+      operationId: closeInstance
+      summary: インスタンスをクローズ
+      description: 指定したインスタンスをクローズする。
+      tags:
+        - Instances
+      parameters:
+        - name: location
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "インスタンスロケーション (worldId:instanceId)"
+        - name: hardClose
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: ハードクローズするかどうか
+      responses:
+        "200":
+          description: クローズ成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    Instance:
+      type: object
+      description: インスタンス情報
+      properties:
+        id:
+          type: string
+          description: "インスタンスID (worldId:instanceId)"
+        location:
+          type: string
+        instanceId:
+          type: string
+        worldId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [public, hidden, friends, friendsPlus, group]
+        region:
+          type: string
+          enum: [us, use, eu, jp]
+        ownerId:
+          type: string
+        capacity:
+          type: integer
+        recommendedCapacity:
+          type: integer
+        n_users:
+          type: integer
+        users:
+          type: array
+          items:
+            type: object
+        shortName:
+          type: string
+        secureName:
+          type: string
+        world:
+          type: object
+        platforms:
+          type: object
+        hasCapacityForYou:
+          type: boolean
+        queueEnabled:
+          type: boolean
+        queueSize:
+          type: integer
+        closedAt:
+          type: string
+          format: date-time
+        hardClose:
+          type: boolean

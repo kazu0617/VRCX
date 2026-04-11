@@ -1,0 +1,361 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Worlds
+  description: |
+    VRChat API のワールド関連エンドポイント。
+    ワールド情報の取得、検索、更新、公開・非公開、画像アップロードを含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /worlds/{worldId}:
+    get:
+      operationId: getWorld
+      summary: ワールド情報を取得
+      description: 指定したワールドIDのワールド情報を取得する。
+      tags:
+        - Worlds
+      parameters:
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ワールドID (wrld_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+      responses:
+        "200":
+          description: ワールド情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/World"
+        "404":
+          description: ワールドが見つからない
+    put:
+      operationId: updateWorld
+      summary: ワールド情報を更新
+      description: 指定したワールドのメタデータを更新する。
+      tags:
+        - Worlds
+      parameters:
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                releaseStatus:
+                  type: string
+                  enum: [public, private, hidden]
+                imageUrl:
+                  type: string
+      responses:
+        "200":
+          description: 更新後のワールド情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/World"
+    delete:
+      operationId: deleteWorld
+      summary: ワールドを削除
+      description: 指定したワールドを削除する。
+      tags:
+        - Worlds
+      parameters:
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+
+  /worlds:
+    get:
+      operationId: getWorlds
+      summary: ワールドを検索
+      description: 条件に基づいてワールドを検索する。
+      tags:
+        - Worlds
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: 検索キーワード
+        - name: n
+          in: query
+          schema:
+            type: integer
+            default: 60
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: オフセット
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ascending, descending]
+          description: ソート順
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [popularity, heat, trust, shuffle, favorites, reportScore, reportCount, publicationDate, labsPublicationDate, created, _created_at, updated, _updated_at, order]
+          description: ソート基準
+        - name: releaseStatus
+          in: query
+          schema:
+            type: string
+            enum: [public, private, hidden, all]
+          description: リリースステータスでフィルタ
+        - name: userId
+          in: query
+          schema:
+            type: string
+          description: ユーザーIDでフィルタ
+        - name: tag
+          in: query
+          schema:
+            type: string
+          description: タグでフィルタ
+        - name: platform
+          in: query
+          schema:
+            type: string
+          description: プラットフォームでフィルタ
+      responses:
+        "200":
+          description: ワールド一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/World"
+
+  /worlds/{option}:
+    get:
+      operationId: getWorldsByOption
+      summary: オプション指定でワールドを取得
+      description: |
+        特定のオプション (active, recent, favorite 等) を指定してワールド一覧を取得する。
+      tags:
+        - Worlds
+      parameters:
+        - name: option
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [active, recent, favorites]
+          description: フィルタオプション
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+        - name: userId
+          in: query
+          schema:
+            type: string
+          description: ユーザーIDでフィルタ
+      responses:
+        "200":
+          description: ワールド一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/World"
+
+  /worlds/{worldId}/publish:
+    put:
+      operationId: publishWorld
+      summary: ワールドを公開
+      description: 指定したワールドを公開する。
+      tags:
+        - Worlds
+      parameters:
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 公開後のワールド情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/World"
+    delete:
+      operationId: unpublishWorld
+      summary: ワールドを非公開にする
+      description: 指定したワールドを非公開にする。
+      tags:
+        - Worlds
+      parameters:
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 非公開後のワールド情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/World"
+
+  /worlds/favorites:
+    get:
+      operationId: getFavoriteWorlds
+      summary: お気に入りワールド一覧を取得
+      description: 現在のユーザーのお気に入りワールド一覧を取得する。
+      tags:
+        - Worlds
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: お気に入りワールド一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/World"
+
+  /visits:
+    get:
+      operationId: getVisits
+      summary: 訪問統計を取得
+      description: ワールドの訪問統計情報を取得する。
+      tags:
+        - Worlds
+      responses:
+        "200":
+          description: 訪問統計
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    World:
+      type: object
+      description: ワールド情報
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        capacity:
+          type: integer
+        recommendedCapacity:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        releaseStatus:
+          type: string
+          enum: [public, private, hidden]
+        imageUrl:
+          type: string
+        thumbnailImageUrl:
+          type: string
+        version:
+          type: integer
+        organization:
+          type: string
+        favorites:
+          type: integer
+        visits:
+          type: integer
+        popularity:
+          type: integer
+        heat:
+          type: integer
+        occupants:
+          type: integer
+        publicOccupants:
+          type: integer
+        privateOccupants:
+          type: integer
+        instances:
+          type: array
+          items:
+            type: array
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        publicationDate:
+          type: string
+          format: date-time
+        labsPublicationDate:
+          type: string
+          format: date-time
+        unityPackages:
+          type: array
+          items:
+            type: object

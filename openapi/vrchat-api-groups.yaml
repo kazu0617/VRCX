@@ -1,0 +1,1256 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Groups
+  description: |
+    VRChat API のグループ関連エンドポイント。
+    グループ情報の取得・検索、メンバー管理、ロール管理、投稿、
+    ギャラリー、カレンダー、BAN、監査ログを含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /groups/{groupId}:
+    get:
+      operationId: getGroup
+      summary: グループ情報を取得
+      description: 指定したグループIDのグループ情報を取得する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: グループID (grp_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+        - name: includeRoles
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: ロール情報を含めるかどうか
+      responses:
+        "200":
+          description: グループ情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+        "404":
+          description: グループが見つからない
+
+  /groups:
+    get:
+      operationId: searchGroups
+      summary: グループを検索
+      description: 条件に基づいてグループを検索する。
+      tags:
+        - Groups
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+          description: 検索キーワード
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ascending, descending]
+          description: ソート順
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+          description: ソート基準
+      responses:
+        "200":
+          description: グループ一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+
+  /groups/strictsearch:
+    get:
+      operationId: strictSearchGroups
+      summary: グループを厳密検索
+      description: 厳密な条件でグループを検索する。
+      tags:
+        - Groups
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 検索キーワード
+      responses:
+        "200":
+          description: グループ一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+
+  /groups/{groupId}/join:
+    post:
+      operationId: joinGroup
+      summary: グループに参加
+      description: 指定したグループに参加する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 参加成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/leave:
+    post:
+      operationId: leaveGroup
+      summary: グループを脱退
+      description: 指定したグループから脱退する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 脱退成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/block:
+    post:
+      operationId: blockGroup
+      summary: グループをブロック
+      description: 指定したグループをブロックする。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ブロック成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/representation:
+    put:
+      operationId: setGroupRepresentation
+      summary: 代表グループを設定
+      description: 指定したグループを代表グループとして設定する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isRepresenting
+              properties:
+                isRepresenting:
+                  type: boolean
+      responses:
+        "200":
+          description: 設定成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/members:
+    get:
+      operationId: getGroupMembers
+      summary: グループメンバー一覧を取得
+      description: 指定したグループのメンバー一覧を取得する。
+      tags:
+        - Group Members
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: メンバー一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupMember"
+
+  /groups/{groupId}/members/{userId}:
+    get:
+      operationId: getGroupMember
+      summary: グループメンバー情報を取得
+      description: 指定したグループの特定メンバーの情報を取得する。
+      tags:
+        - Group Members
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: メンバー情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupMember"
+    put:
+      operationId: updateGroupMember
+      summary: グループメンバー設定を更新
+      description: グループメンバーの公開設定や通知設定を更新する。
+      tags:
+        - Group Members
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                visibility:
+                  type: string
+                isSubscribedToAnnouncements:
+                  type: boolean
+                managerNotes:
+                  type: string
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupMember"
+    delete:
+      operationId: removeGroupMember
+      summary: グループメンバーを削除（キック/ブロック解除）
+      description: 指定したメンバーをグループから削除する。
+      tags:
+        - Group Members
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/members/search:
+    get:
+      operationId: searchGroupMembers
+      summary: グループメンバーを検索
+      description: グループ内のメンバーを名前で検索する。
+      tags:
+        - Group Members
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: query
+          in: query
+          schema:
+            type: string
+          description: 検索キーワード
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: 検索結果
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupMember"
+
+  /groups/{groupId}/members/{userId}/roles/{roleId}:
+    put:
+      operationId: addGroupMemberRole
+      summary: メンバーにロールを追加
+      description: 指定したメンバーにグループロールを追加する。
+      tags:
+        - Group Members
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ロール追加成功
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      operationId: removeGroupMemberRole
+      summary: メンバーからロールを削除
+      description: 指定したメンバーからグループロールを削除する。
+      tags:
+        - Group Members
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ロール削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/roles:
+    get:
+      operationId: getGroupRoles
+      summary: グループロール一覧を取得
+      description: 指定したグループのロール一覧を取得する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ロール一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupRole"
+
+  /groups/{groupId}/posts:
+    get:
+      operationId: getGroupPosts
+      summary: グループ投稿一覧を取得
+      description: 指定したグループの投稿一覧を取得する。
+      tags:
+        - Group Posts
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: 投稿一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupPost"
+    post:
+      operationId: createGroupPost
+      summary: グループ投稿を作成
+      description: 指定したグループに投稿を作成する。
+      tags:
+        - Group Posts
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                text:
+                  type: string
+                imageUrl:
+                  type: string
+                sendNotification:
+                  type: boolean
+                roleIds:
+                  type: array
+                  items:
+                    type: string
+                visibility:
+                  type: string
+      responses:
+        "200":
+          description: 作成された投稿
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupPost"
+
+  /groups/{groupId}/posts/{postId}:
+    put:
+      operationId: editGroupPost
+      summary: グループ投稿を編集
+      description: 指定したグループ投稿を編集する。
+      tags:
+        - Group Posts
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                text:
+                  type: string
+                imageUrl:
+                  type: string
+                visibility:
+                  type: string
+      responses:
+        "200":
+          description: 編集後の投稿
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupPost"
+    delete:
+      operationId: deleteGroupPost
+      summary: グループ投稿を削除
+      description: 指定したグループ投稿を削除する。
+      tags:
+        - Group Posts
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+
+  /groups/{groupId}/galleries/{galleryId}:
+    get:
+      operationId: getGroupGallery
+      summary: グループギャラリーを取得
+      description: 指定したグループのギャラリー画像一覧を取得する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: galleryId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: ギャラリー画像一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /groups/{groupId}/bans:
+    get:
+      operationId: getGroupBans
+      summary: グループBAN一覧を取得
+      description: 指定したグループのBAN一覧を取得する。
+      tags:
+        - Group Moderation
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: BAN一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      operationId: banGroupMember
+      summary: グループメンバーをBAN
+      description: 指定したメンバーをグループからBANする。
+      tags:
+        - Group Moderation
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+      responses:
+        "200":
+          description: BAN成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/bans/{userId}:
+    delete:
+      operationId: unbanGroupMember
+      summary: グループBANを解除
+      description: 指定したメンバーのグループBANを解除する。
+      tags:
+        - Group Moderation
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: BAN解除成功
+
+  /groups/{groupId}/invites:
+    get:
+      operationId: getGroupInvites
+      summary: グループ招待一覧を取得
+      description: 送信されたグループ招待の一覧を取得する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 招待一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      operationId: sendGroupInvite
+      summary: グループ招待を送信
+      description: 指定したユーザーにグループ招待を送信する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+      responses:
+        "200":
+          description: 招待送信成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/invites/{userId}:
+    delete:
+      operationId: deleteGroupInvite
+      summary: グループ招待を削除
+      description: 送信済みグループ招待を削除する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+
+  /groups/{groupId}/requests:
+    get:
+      operationId: getGroupJoinRequests
+      summary: グループ参加リクエスト一覧を取得
+      description: グループへの参加リクエスト一覧を取得する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 参加リクエスト一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    delete:
+      operationId: cancelGroupRequest
+      summary: グループ参加リクエストをキャンセル
+      description: 自身のグループ参加リクエストをキャンセルする。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: キャンセル成功
+
+  /groups/{groupId}/requests/{userId}:
+    put:
+      operationId: respondToGroupJoinRequest
+      summary: 参加リクエストに応答
+      description: グループ参加リクエストを承認・拒否する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [accept, reject]
+                  description: 承認 or 拒否
+                block:
+                  type: boolean
+                  description: 拒否時にブロックするかどうか
+      responses:
+        "200":
+          description: 応答成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /groups/{groupId}/auditLogTypes:
+    get:
+      operationId: getGroupAuditLogTypes
+      summary: 監査ログタイプ一覧を取得
+      description: グループの監査ログで利用可能なイベントタイプ一覧を取得する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 監査ログタイプ一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /groups/{groupId}/auditLogs:
+    get:
+      operationId: getGroupAuditLogs
+      summary: 監査ログを取得
+      description: グループの監査ログを取得する。
+      tags:
+        - Groups
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+        - name: eventTypes
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          description: イベントタイプでフィルタ
+      responses:
+        "200":
+          description: 監査ログ一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                  totalCount:
+                    type: integer
+                  hasNext:
+                    type: boolean
+
+  /calendar:
+    get:
+      operationId: getCalendars
+      summary: カレンダー一覧を取得
+      description: ユーザーのグループカレンダー一覧を取得する。
+      tags:
+        - Group Calendar
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: カレンダー一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /calendar/following:
+    get:
+      operationId: getFollowingCalendars
+      summary: フォロー中のカレンダーを取得
+      description: フォロー中のグループカレンダー一覧を取得する。
+      tags:
+        - Group Calendar
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: フォロー中のカレンダー一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /calendar/featured:
+    get:
+      operationId: getFeaturedCalendars
+      summary: 注目のカレンダーを取得
+      description: 注目のグループカレンダー一覧を取得する。
+      tags:
+        - Group Calendar
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 注目のカレンダー一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /calendar/{groupId}:
+    get:
+      operationId: getGroupCalendar
+      summary: グループカレンダーを取得
+      description: 指定したグループのカレンダーを取得する。
+      tags:
+        - Group Calendar
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: グループカレンダー
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /calendar/{groupId}/{eventId}:
+    get:
+      operationId: getGroupCalendarEvent
+      summary: カレンダーイベントを取得
+      description: 指定したカレンダーイベントの詳細を取得する。
+      tags:
+        - Group Calendar
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: カレンダーイベント情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /calendar/{groupId}/{eventId}/follow:
+    post:
+      operationId: followGroupEvent
+      summary: カレンダーイベントをフォロー
+      description: 指定したカレンダーイベントのフォロー状態を切り替える。
+      tags:
+        - Group Calendar
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isFollowing
+              properties:
+                isFollowing:
+                  type: boolean
+      responses:
+        "200":
+          description: フォロー状態更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    Group:
+      type: object
+      description: グループ情報
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        shortCode:
+          type: string
+        discriminator:
+          type: string
+        description:
+          type: string
+        iconUrl:
+          type: string
+        bannerUrl:
+          type: string
+        ownerId:
+          type: string
+        memberCount:
+          type: integer
+        memberCountSynced_at:
+          type: string
+          format: date-time
+        rules:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        links:
+          type: array
+          items:
+            type: string
+        roles:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupRole"
+        myMember:
+          $ref: "#/components/schemas/GroupMember"
+        createdAt:
+          type: string
+          format: date-time
+
+    GroupMember:
+      type: object
+      description: グループメンバー情報
+      properties:
+        id:
+          type: string
+        groupId:
+          type: string
+        userId:
+          type: string
+        roleIds:
+          type: array
+          items:
+            type: string
+        managerNotes:
+          type: string
+        membershipStatus:
+          type: string
+        visibility:
+          type: string
+        isSubscribedToAnnouncements:
+          type: boolean
+        isRepresenting:
+          type: boolean
+        joinedAt:
+          type: string
+          format: date-time
+        bannedAt:
+          type: string
+          format: date-time
+        has2FA:
+          type: boolean
+
+    GroupRole:
+      type: object
+      description: グループロール情報
+      properties:
+        id:
+          type: string
+        groupId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+        permissions:
+          type: array
+          items:
+            type: string
+        isSelfAssignable:
+          type: boolean
+        isManagementRole:
+          type: boolean
+        requiresPurchase:
+          type: boolean
+        requiresTwoFactor:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    GroupPost:
+      type: object
+      description: グループ投稿情報
+      properties:
+        id:
+          type: string
+        groupId:
+          type: string
+        authorId:
+          type: string
+        title:
+          type: string
+        text:
+          type: string
+        imageUrl:
+          type: string
+        visibility:
+          type: string
+        roleIds:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Friends
+  description: |
+    VRChat API のフレンド関連エンドポイント。
+    フレンド一覧の取得、フレンドリクエストの送信・キャンセル・削除を含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /auth/user/friends:
+    get:
+      operationId: getFriends
+      summary: フレンド一覧を取得
+      description: 現在のユーザーのフレンド一覧を取得する。
+      tags:
+        - Friends
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+            default: 60
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: オフセット
+        - name: offline
+          in: query
+          schema:
+            type: boolean
+          description: オフラインフレンドを含めるかどうか
+      responses:
+        "200":
+          description: フレンド一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Friend"
+
+  /auth/user/friends/{userId}:
+    delete:
+      operationId: deleteFriend
+      summary: フレンドを削除
+      description: 指定したユーザーをフレンドから削除する。
+      tags:
+        - Friends
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      status_code:
+                        type: integer
+
+  /user/{userId}/friendRequest:
+    post:
+      operationId: sendFriendRequest
+      summary: フレンドリクエストを送信
+      description: 指定したユーザーにフレンドリクエストを送信する。
+      tags:
+        - Friends
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 送信成功
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      operationId: cancelFriendRequest
+      summary: フレンドリクエストをキャンセル
+      description: 指定したユーザーへのフレンドリクエストをキャンセルする。
+      tags:
+        - Friends
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: キャンセル成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /user/{userId}/friendStatus:
+    get:
+      operationId: getFriendStatus
+      summary: フレンド状態を取得
+      description: 指定したユーザーとのフレンド関係の状態を取得する。
+      tags:
+        - Friends
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: フレンド状態
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isFriend:
+                    type: boolean
+                  outgoingRequest:
+                    type: boolean
+                  incomingRequest:
+                    type: boolean
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    Friend:
+      type: object
+      description: フレンドユーザー情報
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        userIcon:
+          type: string
+        profilePicOverride:
+          type: string
+        currentAvatarImageUrl:
+          type: string
+        currentAvatarThumbnailImageUrl:
+          type: string
+        state:
+          type: string
+          enum: [online, active, offline]
+        status:
+          type: string
+          enum: [active, join me, ask me, busy, offline]
+        statusDescription:
+          type: string
+        location:
+          type: string
+        platform:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string

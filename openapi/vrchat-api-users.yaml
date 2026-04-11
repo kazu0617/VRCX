@@ -1,0 +1,730 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Users
+  description: |
+    VRChat API のユーザー関連エンドポイント。
+    ユーザー情報の取得、更新、メモ、バッジ管理等を含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /users/{userId}:
+    get:
+      operationId: getUser
+      summary: ユーザー情報を取得
+      description: 指定したユーザーIDのユーザー情報を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ユーザーID (usr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+      responses:
+        "200":
+          description: ユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          description: ユーザーが見つからない
+    put:
+      operationId: updateUser
+      summary: ユーザー情報を更新
+      description: 現在のユーザーの情報を更新する。自身のユーザーIDのみ指定可能。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, join me, ask me, busy, offline]
+                statusDescription:
+                  type: string
+                bio:
+                  type: string
+                bioLinks:
+                  type: array
+                  items:
+                    type: string
+                userIcon:
+                  type: string
+      responses:
+        "200":
+          description: 更新後のユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users:
+    get:
+      operationId: getUsers
+      summary: ユーザーを検索
+      description: 条件に基づいてユーザーを検索する。
+      tags:
+        - Users
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: 検索キーワード
+        - name: n
+          in: query
+          schema:
+            type: integer
+            default: 60
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: オフセット
+      responses:
+        "200":
+          description: ユーザー一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /users/{userId}/addTags:
+    post:
+      operationId: addUserTags
+      summary: ユーザータグを追加
+      description: 現在のユーザーにタグを追加する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tags
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: 更新後のユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}/removeTags:
+    post:
+      operationId: removeUserTags
+      summary: ユーザータグを削除
+      description: 現在のユーザーからタグを削除する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tags
+              properties:
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: 更新後のユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{userId}/feedback:
+    get:
+      operationId: getUserFeedback
+      summary: ユーザーフィードバックを取得
+      description: 指定したユーザーのフィードバック（レポート）情報を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+            default: 100
+          description: 取得件数
+      responses:
+        "200":
+          description: フィードバック一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /userNotes:
+    get:
+      operationId: getUserNotes
+      summary: ユーザーメモ一覧を取得
+      description: 現在のユーザーが作成したメモの一覧を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: メモ一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserNote"
+    post:
+      operationId: saveUserNote
+      summary: ユーザーメモを保存
+      description: 指定したユーザーに対するメモを作成・更新する。
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                targetUserId:
+                  type: string
+                note:
+                  type: string
+      responses:
+        "200":
+          description: 保存されたメモ
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserNote"
+
+  /users/{userId}/mutuals:
+    get:
+      operationId: getMutualCounts
+      summary: 相互関係の数を取得
+      description: 指定したユーザーとの相互フレンド・グループ数を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 相互関係数
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  friendCount:
+                    type: integer
+                  groupCount:
+                    type: integer
+        "403":
+          description: アクセス拒否
+
+  /users/{userId}/mutuals/friends:
+    get:
+      operationId: getMutualFriends
+      summary: 相互フレンド一覧を取得
+      description: 指定したユーザーとの相互フレンドの一覧を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 相互フレンド一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "403":
+          description: アクセス拒否
+
+  /users/{userId}/mutuals/groups:
+    get:
+      operationId: getMutualGroups
+      summary: 相互グループ一覧を取得
+      description: 指定したユーザーとの相互グループの一覧を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 相互グループ一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /users/{userId}/badges/{badgeId}:
+    put:
+      operationId: updateBadge
+      summary: バッジ設定を更新
+      description: ユーザーのバッジ表示設定を更新する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: badgeId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                badgeId:
+                  type: string
+                hidden:
+                  type: boolean
+                showcased:
+                  type: boolean
+      responses:
+        "200":
+          description: 更新結果
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /user/{userId}/balance:
+    get:
+      operationId: getVRChatCredits
+      summary: VRChat クレジット残高を取得
+      description: 指定したユーザーのVRChatクレジット残高を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: クレジット残高情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /users/{userId}/boop:
+    post:
+      operationId: sendBoop
+      summary: Boop を送信
+      description: 指定したユーザーに Boop (絵文字リアクション) を送信する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emojiId:
+                  type: string
+                  description: 送信する絵文字のID
+      responses:
+        "200":
+          description: 送信結果
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /users/{userId}/groups:
+    get:
+      operationId: getUserGroups
+      summary: ユーザーのグループ一覧を取得
+      description: 指定したユーザーが所属するグループの一覧を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: グループ一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /users/{userId}/groups/represented:
+    get:
+      operationId: getRepresentedGroup
+      summary: 代表グループを取得
+      description: 指定したユーザーの代表グループ情報を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 代表グループ情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /users/{userId}/groups/permissions:
+    get:
+      operationId: getGroupPermissions
+      summary: グループ権限を取得
+      description: 指定したユーザーのグループ権限情報を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: グループ権限情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /users/{userId}/instances/groups:
+    get:
+      operationId: getUserGroupInstances
+      summary: ユーザーのグループインスタンス一覧を取得
+      description: 指定したユーザーの全グループインスタンスの一覧を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: グループインスタンス一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        "429":
+          description: レート制限
+
+  /users/{userId}/instances/groups/{groupId}:
+    get:
+      operationId: getUserGroupInstancesByGroup
+      summary: 特定グループのインスタンス一覧を取得
+      description: 指定したユーザーの特定グループのインスタンス一覧を取得する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: グループインスタンス一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /users/{userId}/{worldId}/persist:
+    delete:
+      operationId: deleteWorldPersistData
+      summary: ワールド永続データを削除
+      description: 指定したワールドの永続データを削除する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+
+  /users/{userId}/{worldId}/persist/exists:
+    get:
+      operationId: hasWorldPersistData
+      summary: ワールド永続データの存在確認
+      description: 指定したワールドに永続データが存在するか確認する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: worldId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 存在する場合 true
+          content:
+            application/json:
+              schema:
+                type: boolean
+        "404":
+          description: 存在しない (false として扱う)
+
+  /feedback/{userId}/user:
+    post:
+      operationId: reportUser
+      summary: ユーザーを通報
+      description: 指定したユーザーを通報する。
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contentType
+                - reason
+                - type
+              properties:
+                contentType:
+                  type: string
+                reason:
+                  type: string
+                type:
+                  type: string
+      responses:
+        "200":
+          description: 通報結果
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    User:
+      type: object
+      description: ユーザー情報
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        userIcon:
+          type: string
+        profilePicOverride:
+          type: string
+        profilePicOverrideThumbnail:
+          type: string
+        bio:
+          type: string
+        bioLinks:
+          type: array
+          items:
+            type: string
+        currentAvatarImageUrl:
+          type: string
+        currentAvatarThumbnailImageUrl:
+          type: string
+        state:
+          type: string
+          enum: [online, active, offline]
+        status:
+          type: string
+          enum: [active, join me, ask me, busy, offline]
+        statusDescription:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        location:
+          type: string
+        worldId:
+          type: string
+        instanceId:
+          type: string
+        travelingToLocation:
+          type: string
+        travelingToWorld:
+          type: string
+        travelingToInstance:
+          type: string
+        platform:
+          type: string
+        last_platform:
+          type: string
+        allowAvatarCopying:
+          type: boolean
+        date_joined:
+          type: string
+          format: date
+        last_login:
+          type: string
+          format: date-time
+        last_activity:
+          type: string
+          format: date-time
+        badges:
+          type: array
+          items:
+            type: object
+
+    UserNote:
+      type: object
+      description: ユーザーメモ
+      properties:
+        id:
+          type: string
+        targetUserId:
+          type: string
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

@@ -1,0 +1,228 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Authentication
+  description: |
+    VRChat API の認証関連エンドポイント。
+    二要素認証の検証やサーバー設定の取得を含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /config:
+    get:
+      operationId: getConfig
+      summary: サーバー設定を取得
+      description: VRChat API の公開設定情報を取得する。認証不要。
+      tags:
+        - Authentication
+      security: []
+      responses:
+        "200":
+          description: 設定情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
+
+  /auth:
+    get:
+      operationId: getAuthToken
+      summary: WebSocket認証トークンを取得
+      description: WebSocket Pipeline 接続用の認証トークンを取得する。
+      tags:
+        - Authentication
+      responses:
+        "200":
+          description: 認証トークン
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  token:
+                    type: string
+                    description: WebSocket接続用トークン
+
+  /auth/twofactorauth/otp/verify:
+    post:
+      operationId: verifyOTP
+      summary: OTP (ワンタイムパスワード) を検証
+      description: ワンタイムパスワードによる二要素認証を検証する。
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: ワンタイムパスワード
+      responses:
+        "200":
+          description: 検証結果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoFactorAuthResult"
+
+  /auth/twofactorauth/totp/verify:
+    post:
+      operationId: verifyTOTP
+      summary: TOTP (時刻ベースワンタイムパスワード) を検証
+      description: 時刻ベースワンタイムパスワードによる二要素認証を検証する。
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: TOTP コード
+      responses:
+        "200":
+          description: 検証結果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoFactorAuthResult"
+
+  /auth/twofactorauth/emailotp/verify:
+    post:
+      operationId: verifyEmailOTP
+      summary: メールOTPを検証
+      description: メールで送信されたワンタイムパスワードによる二要素認証を検証する。
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: メールOTPコード
+      responses:
+        "200":
+          description: 検証結果
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoFactorAuthResult"
+
+  /auth/user:
+    get:
+      operationId: getCurrentUser
+      summary: 現在のユーザー情報を取得
+      description: 認証済みの現在のユーザー情報を取得する。
+      tags:
+        - Authentication
+      responses:
+        "200":
+          description: 現在のユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUser"
+        "401":
+          description: 未認証（2FA 必要の場合あり）
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+      description: 認証Cookie
+
+  schemas:
+    Config:
+      type: object
+      description: VRChat サーバー設定
+      properties:
+        apiKey:
+          type: string
+        uploadKey:
+          type: string
+        announcements:
+          type: array
+          items:
+            type: object
+        dynamicWorldRows:
+          type: array
+          items:
+            type: object
+
+    TwoFactorAuthResult:
+      type: object
+      properties:
+        verified:
+          type: boolean
+          description: 検証成功かどうか
+
+    CurrentUser:
+      type: object
+      description: 現在の認証ユーザー情報
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+        userIcon:
+          type: string
+        bio:
+          type: string
+        currentAvatarImageUrl:
+          type: string
+        currentAvatarThumbnailImageUrl:
+          type: string
+        state:
+          type: string
+          enum: [online, active, offline]
+        status:
+          type: string
+          enum: [active, join me, ask me, busy, offline]
+        statusDescription:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        friends:
+          type: array
+          items:
+            type: string
+        onlineFriends:
+          type: array
+          items:
+            type: string
+        activeFriends:
+          type: array
+          items:
+            type: string
+        offlineFriends:
+          type: array
+          items:
+            type: string

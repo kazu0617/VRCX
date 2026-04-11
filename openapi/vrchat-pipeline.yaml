@@ -1,0 +1,591 @@
+asyncapi: 2.6.0
+info:
+  title: VRChat Pipeline - WebSocket API
+  description: |
+    VRChat のリアルタイムイベント配信用 WebSocket API。
+    フレンドのオンライン状態変更、通知、グループイベント、
+    インスタンスキュー等のリアルタイムイベントを受信する。
+
+    接続方法:
+    1. REST API の `GET /auth` でトークンを取得
+    2. `wss://pipeline.vrchat.cloud/?auth={token}` に WebSocket 接続
+
+    メッセージ形式:
+    各メッセージは JSON で、`type` と `content` フィールドを持つ。
+    `content` は二重 JSON エンコードされている（文字列を再パースする必要がある）。
+  version: "1.0.0"
+
+servers:
+  production:
+    url: wss://pipeline.vrchat.cloud
+    protocol: wss
+    description: VRChat Pipeline Production Server
+
+channels:
+  /:
+    subscribe:
+      summary: パイプラインイベントを受信
+      description: |
+        WebSocket 接続で以下のリアルタイムイベントを受信する。
+        クエリパラメータ `auth` にトークンを指定して接続する。
+      message:
+        oneOf:
+          - $ref: "#/components/messages/FriendOnline"
+          - $ref: "#/components/messages/FriendActive"
+          - $ref: "#/components/messages/FriendOffline"
+          - $ref: "#/components/messages/FriendUpdate"
+          - $ref: "#/components/messages/FriendLocation"
+          - $ref: "#/components/messages/FriendAdd"
+          - $ref: "#/components/messages/FriendDelete"
+          - $ref: "#/components/messages/Notification"
+          - $ref: "#/components/messages/NotificationV2"
+          - $ref: "#/components/messages/NotificationV2Delete"
+          - $ref: "#/components/messages/NotificationV2Update"
+          - $ref: "#/components/messages/SeeNotification"
+          - $ref: "#/components/messages/HideNotification"
+          - $ref: "#/components/messages/ResponseNotification"
+          - $ref: "#/components/messages/UserUpdate"
+          - $ref: "#/components/messages/UserLocation"
+          - $ref: "#/components/messages/GroupJoined"
+          - $ref: "#/components/messages/GroupLeft"
+          - $ref: "#/components/messages/GroupRoleUpdated"
+          - $ref: "#/components/messages/GroupMemberUpdated"
+          - $ref: "#/components/messages/InstanceQueueJoined"
+          - $ref: "#/components/messages/InstanceQueuePosition"
+          - $ref: "#/components/messages/InstanceQueueReady"
+          - $ref: "#/components/messages/InstanceQueueLeft"
+          - $ref: "#/components/messages/ContentRefresh"
+          - $ref: "#/components/messages/InstanceClosed"
+
+components:
+  messages:
+    FriendOnline:
+      name: friend-online
+      summary: フレンドがオンラインになった
+      description: フレンドがオンライン状態になった時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: friend-online
+          content:
+            type: object
+            properties:
+              userId:
+                type: string
+              user:
+                type: object
+                description: ユーザー情報
+              location:
+                type: string
+                description: "現在のロケーション (worldId:instanceId)"
+              worldId:
+                type: string
+              travelingToLocation:
+                type: string
+              platform:
+                type: string
+
+    FriendActive:
+      name: friend-active
+      summary: フレンドがアクティブになった
+      description: フレンドがアクティブ状態（Webのみ）になった時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: friend-active
+          content:
+            type: object
+            properties:
+              userId:
+                type: string
+              user:
+                type: object
+              platform:
+                type: string
+
+    FriendOffline:
+      name: friend-offline
+      summary: フレンドがオフラインになった
+      description: フレンドがオフライン状態になった時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: friend-offline
+          content:
+            type: object
+            properties:
+              userId:
+                type: string
+              platform:
+                type: string
+
+    FriendUpdate:
+      name: friend-update
+      summary: フレンドの情報が更新された
+      description: フレンドのプロフィール情報が更新された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: friend-update
+          content:
+            type: object
+            properties:
+              user:
+                type: object
+                description: 更新後のユーザー情報
+
+    FriendLocation:
+      name: friend-location
+      summary: フレンドのロケーションが変更された
+      description: フレンドが別のインスタンスに移動した時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: friend-location
+          content:
+            type: object
+            properties:
+              userId:
+                type: string
+              user:
+                type: object
+              location:
+                type: string
+              worldId:
+                type: string
+              travelingToLocation:
+                type: string
+
+    FriendAdd:
+      name: friend-add
+      summary: 新しいフレンドが追加された
+      description: フレンドリクエストが承認されフレンドが追加された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: friend-add
+          content:
+            type: object
+            properties:
+              userId:
+                type: string
+              user:
+                type: object
+
+    FriendDelete:
+      name: friend-delete
+      summary: フレンドが削除された
+      description: フレンドが削除された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: friend-delete
+          content:
+            type: object
+            properties:
+              userId:
+                type: string
+
+    Notification:
+      name: notification
+      summary: 通知を受信 (v1)
+      description: 新しい通知（招待、フレンドリクエスト等）を受信した時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: notification
+          content:
+            type: object
+            properties:
+              id:
+                type: string
+              senderUserId:
+                type: string
+              senderUsername:
+                type: string
+              type:
+                type: string
+              message:
+                type: string
+              details:
+                type: object
+              created_at:
+                type: string
+                format: date-time
+
+    NotificationV2:
+      name: notification-v2
+      summary: 通知を受信 (v2)
+      description: v2形式の新しい通知を受信した時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: notification-v2
+          content:
+            type: object
+            properties:
+              id:
+                type: string
+
+    NotificationV2Delete:
+      name: notification-v2-delete
+      summary: 通知が削除された (v2)
+      description: v2形式の通知が削除された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: notification-v2-delete
+          content:
+            type: object
+            properties:
+              ids:
+                type: array
+                items:
+                  type: string
+
+    NotificationV2Update:
+      name: notification-v2-update
+      summary: 通知が更新された (v2)
+      description: v2形式の通知が更新された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: notification-v2-update
+          content:
+            type: object
+            properties:
+              id:
+                type: string
+              updates:
+                type: object
+
+    SeeNotification:
+      name: see-notification
+      summary: 通知が既読になった
+      description: 通知が既読にされた時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: see-notification
+          content:
+            type: string
+            description: 通知ID
+
+    HideNotification:
+      name: hide-notification
+      summary: 通知が非表示になった
+      description: 通知が非表示にされた時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: hide-notification
+          content:
+            type: string
+            description: 通知ID
+
+    ResponseNotification:
+      name: response-notification
+      summary: 通知に応答された
+      description: 通知に応答があった時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: response-notification
+          content:
+            type: object
+            properties:
+              notificationId:
+                type: string
+
+    UserUpdate:
+      name: user-update
+      summary: 現在のユーザー情報が更新された
+      description: 自身のユーザー情報が更新された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: user-update
+          content:
+            type: object
+            properties:
+              user:
+                type: object
+
+    UserLocation:
+      name: user-location
+      summary: 現在のユーザーのロケーションが変更された
+      description: 自身のロケーションが変更された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: user-location
+          content:
+            type: object
+            properties:
+              userId:
+                type: string
+              location:
+                type: string
+              travelingToLocation:
+                type: string
+
+    GroupJoined:
+      name: group-joined
+      summary: グループに参加した
+      description: グループに参加した時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: group-joined
+          content:
+            type: object
+            properties:
+              groupId:
+                type: string
+
+    GroupLeft:
+      name: group-left
+      summary: グループを脱退した
+      description: グループから脱退した時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: group-left
+          content:
+            type: object
+            properties:
+              groupId:
+                type: string
+
+    GroupRoleUpdated:
+      name: group-role-updated
+      summary: グループロールが更新された
+      description: グループのロール定義が更新された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: group-role-updated
+          content:
+            type: object
+            properties:
+              role:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  groupId:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  order:
+                    type: integer
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                  isManagementRole:
+                    type: boolean
+                  isSelfAssignable:
+                    type: boolean
+                  requiresPurchase:
+                    type: boolean
+                  requiresTwoFactor:
+                    type: boolean
+                  createdAt:
+                    type: string
+                    format: date-time
+
+    GroupMemberUpdated:
+      name: group-member-updated
+      summary: グループメンバー情報が更新された
+      description: グループメンバーの情報が更新された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: group-member-updated
+          content:
+            type: object
+            properties:
+              member:
+                type: object
+                properties:
+                  groupId:
+                    type: string
+                  userId:
+                    type: string
+                  roleIds:
+                    type: array
+                    items:
+                      type: string
+
+    InstanceQueueJoined:
+      name: instance-queue-joined
+      summary: インスタンスキューに参加した
+      description: インスタンスの待機キューに参加した時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: instance-queue-joined
+          content:
+            type: object
+            properties:
+              instanceLocation:
+                type: string
+              position:
+                type: integer
+              queueSize:
+                type: integer
+
+    InstanceQueuePosition:
+      name: instance-queue-position
+      summary: キュー位置が更新された
+      description: インスタンスキュー内の位置が更新された時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: instance-queue-position
+          content:
+            type: object
+            properties:
+              instanceLocation:
+                type: string
+              position:
+                type: integer
+              queueSize:
+                type: integer
+
+    InstanceQueueReady:
+      name: instance-queue-ready
+      summary: キューの順番が来た
+      description: インスタンスキューの順番が来て入室可能になった時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: instance-queue-ready
+          content:
+            type: object
+            properties:
+              instanceLocation:
+                type: string
+              expiry:
+                type: string
+                format: date-time
+
+    InstanceQueueLeft:
+      name: instance-queue-left
+      summary: キューから離脱した
+      description: インスタンスキューから離脱した時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: instance-queue-left
+          content:
+            type: object
+            properties:
+              instanceLocation:
+                type: string
+
+    ContentRefresh:
+      name: content-refresh
+      summary: コンテンツ更新通知
+      description: |
+        コンテンツが更新された時に送信される。contentType で更新されたコンテンツの種類を判別する。
+        - `icon`: VRC+アイコン
+        - `gallery`: ギャラリー画像
+        - `emoji`: 絵文字
+        - `sticker`: ステッカー
+        - `print`/`prints`: プリント
+        - `avatar`: アバター
+        - `world`: ワールド
+        - `avatargallery`: アバターギャラリー
+        - `invitePhoto`: 招待写真
+        - `inventory`: インベントリ
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: content-refresh
+          content:
+            type: object
+            properties:
+              contentType:
+                type: string
+                enum: [icon, gallery, emoji, sticker, print, prints, avatar, world, avatargallery, invitePhoto, inventory, created]
+              actionType:
+                type: string
+                enum: [created, add]
+                description: アクションタイプ（プリント作成、インベントリ追加等）
+              itemId:
+                type: string
+                description: アイテムID（インベントリ更新時）
+              itemType:
+                type: string
+                description: アイテムタイプ（インベントリ更新時）
+
+    InstanceClosed:
+      name: instance-closed
+      summary: インスタンスがクローズされた
+      description: インスタンスがクローズされた時に送信される。
+      payload:
+        type: object
+        properties:
+          type:
+            type: string
+            const: instance-closed
+          content:
+            type: object
+            properties:
+              instanceLocation:
+                type: string
+                description: "クローズされたインスタンスのロケーション (worldId:instanceId)"

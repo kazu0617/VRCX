@@ -1,0 +1,211 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Moderation
+  description: |
+    VRChat API のモデレーション関連エンドポイント。
+    プレイヤーモデレーション（ブロック・ミュート等）とアバターモデレーションを含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /auth/user/playermoderations:
+    get:
+      operationId: getPlayerModerations
+      summary: プレイヤーモデレーション一覧を取得
+      description: 現在のユーザーのプレイヤーモデレーション（ブロック・ミュート等）一覧を取得する。
+      tags:
+        - Player Moderation
+      responses:
+        "200":
+          description: プレイヤーモデレーション一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlayerModeration"
+    post:
+      operationId: createPlayerModeration
+      summary: プレイヤーモデレーションを作成
+      description: 指定したユーザーに対してモデレーション（ブロック・ミュート等）を作成する。
+      tags:
+        - Player Moderation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - moderated
+                - type
+              properties:
+                moderated:
+                  type: string
+                  description: 対象ユーザーID
+                type:
+                  type: string
+                  enum: [mute, unmute, block, unblock, hideAvatar, showAvatar, interactOn, interactOff]
+                  description: モデレーションタイプ
+      responses:
+        "200":
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerModeration"
+
+  /auth/user/unplayermoderate:
+    put:
+      operationId: deletePlayerModeration
+      summary: プレイヤーモデレーションを解除
+      description: 指定したユーザーに対するモデレーションを解除する。
+      tags:
+        - Player Moderation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - moderated
+                - type
+              properties:
+                moderated:
+                  type: string
+                  description: 対象ユーザーID
+                type:
+                  type: string
+                  enum: [mute, unmute, block, unblock, hideAvatar, showAvatar, interactOn, interactOff]
+                  description: モデレーションタイプ
+      responses:
+        "200":
+          description: 解除成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /auth/user/avatarmoderations:
+    get:
+      operationId: getAvatarModerations
+      summary: アバターモデレーション一覧を取得
+      description: 現在のユーザーのアバターモデレーション一覧を取得する。
+      tags:
+        - Avatar Moderation
+      responses:
+        "200":
+          description: アバターモデレーション一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvatarModeration"
+    post:
+      operationId: createAvatarModeration
+      summary: アバターモデレーションを作成
+      description: 指定したアバターに対してモデレーション（フィルタ等）を作成する。
+      tags:
+        - Avatar Moderation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - targetAvatarId
+                - avatarModerationType
+              properties:
+                targetAvatarId:
+                  type: string
+                  description: 対象アバターID
+                avatarModerationType:
+                  type: string
+                  description: モデレーションタイプ
+      responses:
+        "200":
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvatarModeration"
+    delete:
+      operationId: deleteAvatarModeration
+      summary: アバターモデレーションを解除
+      description: 指定したアバターに対するモデレーションを解除する。
+      tags:
+        - Avatar Moderation
+      parameters:
+        - name: targetAvatarId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 対象アバターID
+        - name: avatarModerationType
+          in: query
+          required: true
+          schema:
+            type: string
+          description: モデレーションタイプ
+      responses:
+        "200":
+          description: 解除成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    PlayerModeration:
+      type: object
+      description: プレイヤーモデレーション情報
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [mute, unmute, block, unblock, hideAvatar, showAvatar, interactOn, interactOff]
+        sourceUserId:
+          type: string
+        sourceDisplayName:
+          type: string
+        targetUserId:
+          type: string
+        targetDisplayName:
+          type: string
+        created:
+          type: string
+          format: date-time
+
+    AvatarModeration:
+      type: object
+      description: アバターモデレーション情報
+      properties:
+        id:
+          type: string
+        targetAvatarId:
+          type: string
+        avatarModerationType:
+          type: string
+        sourceUserId:
+          type: string
+        created:
+          type: string
+          format: date-time

@@ -1,0 +1,555 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Notifications
+  description: |
+    VRChat API の通知・招待関連エンドポイント。
+    通知の取得・管理、招待の送受信、フレンドリクエスト承認を含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /auth/user/notifications:
+    get:
+      operationId: getNotifications
+      summary: 通知一覧を取得 (v1)
+      description: 現在のユーザーの通知一覧を取得する。
+      tags:
+        - Notifications
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+        - name: sent
+          in: query
+          schema:
+            type: boolean
+          description: 送信した通知を取得
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [all, friendRequest, invite, requestInvite, votetokick]
+          description: 通知タイプでフィルタ
+        - name: after
+          in: query
+          schema:
+            type: string
+          description: "指定日時以降の通知を取得 (ISO8601 または 'five_minutes_ago')"
+        - name: hidden
+          in: query
+          schema:
+            type: boolean
+          description: 非表示の通知を含めるかどうか
+      responses:
+        "200":
+          description: 通知一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications:
+    get:
+      operationId: getNotificationsV2
+      summary: 通知一覧を取得 (v2)
+      description: 通知一覧を v2 API で取得する。
+      tags:
+        - Notifications
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+        - name: type
+          in: query
+          schema:
+            type: string
+          description: 通知タイプでフィルタ
+      responses:
+        "200":
+          description: 通知一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /auth/user/notifications/{notificationId}/accept:
+    put:
+      operationId: acceptFriendRequestNotification
+      summary: フレンドリクエスト通知を承認
+      description: 指定したフレンドリクエスト通知を承認する。
+      tags:
+        - Notifications
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 承認成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /auth/user/notifications/{notificationId}/hide:
+    put:
+      operationId: hideNotification
+      summary: 通知を非表示にする (v1)
+      description: 指定した通知を非表示にする。
+      tags:
+        - Notifications
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 非表示成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /auth/user/notifications/{notificationId}/see:
+    put:
+      operationId: seeNotification
+      summary: 通知を既読にする (v1)
+      description: 指定した通知を既読にする。
+      tags:
+        - Notifications
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 既読成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /notifications/{notificationId}/see:
+    post:
+      operationId: seeNotificationV2
+      summary: 通知を既読にする (v2)
+      description: 指定した通知を v2 API で既読にする。
+      tags:
+        - Notifications
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 既読成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /notifications/{notificationId}/respond:
+    post:
+      operationId: respondToNotification
+      summary: 通知に応答する (v2)
+      description: 指定した通知に応答する。
+      tags:
+        - Notifications
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                responseType:
+                  type: string
+                responseData:
+                  type: string
+      responses:
+        "200":
+          description: 応答成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /notifications/{notificationId}:
+    delete:
+      operationId: deleteNotificationV2
+      summary: 通知を削除する (v2)
+      description: 指定した通知を削除（非表示）にする。
+      tags:
+        - Notifications
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /invite/{receiverUserId}:
+    post:
+      operationId: sendInvite
+      summary: 招待を送信
+      description: 指定したユーザーにインスタンスへの招待を送信する。
+      tags:
+        - Invites
+      parameters:
+        - name: receiverUserId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instanceId:
+                  type: string
+                worldId:
+                  type: string
+                worldName:
+                  type: string
+                message:
+                  type: string
+                messageSlot:
+                  type: string
+                rsvp:
+                  type: boolean
+      responses:
+        "200":
+          description: 送信成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /invite/{receiverUserId}/photo:
+    post:
+      operationId: sendInvitePhoto
+      summary: 写真付き招待を送信
+      description: 指定したユーザーに写真付き招待を送信する。
+      tags:
+        - Invites
+      parameters:
+        - name: receiverUserId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: 招待画像
+                data:
+                  type: string
+                  description: JSON形式の招待データ
+      responses:
+        "200":
+          description: 送信成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /requestInvite/{receiverUserId}:
+    post:
+      operationId: sendRequestInvite
+      summary: 招待リクエストを送信
+      description: 指定したユーザーに招待リクエストを送信する。
+      tags:
+        - Invites
+      parameters:
+        - name: receiverUserId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                messageSlot:
+                  type: string
+      responses:
+        "200":
+          description: 送信成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /requestInvite/{receiverUserId}/photo:
+    post:
+      operationId: sendRequestInvitePhoto
+      summary: 写真付き招待リクエストを送信
+      description: 指定したユーザーに写真付きの招待リクエストを送信する。
+      tags:
+        - Invites
+      parameters:
+        - name: receiverUserId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                data:
+                  type: string
+      responses:
+        "200":
+          description: 送信成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /invite/{inviteId}/response:
+    post:
+      operationId: sendInviteResponse
+      summary: 招待に応答
+      description: 受信した招待に応答する。
+      tags:
+        - Invites
+      parameters:
+        - name: inviteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: 応答成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /invite/{inviteId}/response/photo:
+    post:
+      operationId: sendInviteResponsePhoto
+      summary: 写真付きで招待に応答
+      description: 受信した招待に写真付きで応答する。
+      tags:
+        - Invites
+      parameters:
+        - name: inviteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                data:
+                  type: string
+      responses:
+        "200":
+          description: 応答成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /message/{userId}/{messageType}:
+    get:
+      operationId: getInviteMessages
+      summary: 招待メッセージテンプレートを取得
+      description: 指定したユーザー・メッセージタイプの招待メッセージテンプレート一覧を取得する。
+      tags:
+        - Invites
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: messageType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [message, response, request, requestResponse]
+          description: メッセージタイプ
+      responses:
+        "200":
+          description: メッセージテンプレート一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InviteMessage"
+
+  /message/{userId}/{messageType}/{slot}:
+    put:
+      operationId: editInviteMessage
+      summary: 招待メッセージテンプレートを更新
+      description: 指定したスロットの招待メッセージテンプレートを更新する。
+      tags:
+        - Invites
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: messageType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [message, response, request, requestResponse]
+        - name: slot
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: メッセージスロット番号
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+      responses:
+        "200":
+          description: 更新後のメッセージテンプレート
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteMessage"
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    Notification:
+      type: object
+      description: 通知情報
+      properties:
+        id:
+          type: string
+        senderUserId:
+          type: string
+        senderUsername:
+          type: string
+        receiverUserId:
+          type: string
+        type:
+          type: string
+          enum: [all, friendRequest, invite, requestInvite, votetokick, boop]
+        message:
+          type: string
+        details:
+          type: object
+        seen:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    InviteMessage:
+      type: object
+      description: 招待メッセージテンプレート
+      properties:
+        id:
+          type: integer
+        slot:
+          type: integer
+        message:
+          type: string
+        messageType:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        canBeUpdated:
+          type: boolean

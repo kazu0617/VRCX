@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Favorites
+  description: |
+    VRChat API のお気に入り関連エンドポイント。
+    お気に入りの追加・削除・取得、お気に入りグループの管理を含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /auth/user/favoritelimits:
+    get:
+      operationId: getFavoriteLimits
+      summary: お気に入り上限を取得
+      description: 現在のユーザーのお気に入り上限情報を取得する。
+      tags:
+        - Favorites
+      responses:
+        "200":
+          description: お気に入り上限情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /favorites:
+    get:
+      operationId: getFavorites
+      summary: お気に入り一覧を取得
+      description: 現在のユーザーのお気に入り一覧を取得する。
+      tags:
+        - Favorites
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [world, friend, avatar]
+          description: お気に入りタイプでフィルタ
+        - name: tag
+          in: query
+          schema:
+            type: string
+          description: タグでフィルタ
+      responses:
+        "200":
+          description: お気に入り一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Favorite"
+    post:
+      operationId: addFavorite
+      summary: お気に入りに追加
+      description: 指定したオブジェクトをお気に入りに追加する。
+      tags:
+        - Favorites
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - favoriteId
+                - tags
+              properties:
+                type:
+                  type: string
+                  enum: [world, friend, avatar]
+                  description: お気に入りタイプ
+                favoriteId:
+                  type: string
+                  description: お気に入り対象のID
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: お気に入りグループタグ
+      responses:
+        "200":
+          description: 追加されたお気に入り
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Favorite"
+
+  /favorites/{objectId}:
+    delete:
+      operationId: deleteFavorite
+      summary: お気に入りから削除
+      description: 指定したオブジェクトをお気に入りから削除する。
+      tags:
+        - Favorites
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: お気に入り対象のID
+      responses:
+        "200":
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /favorite/groups:
+    get:
+      operationId: getFavoriteGroups
+      summary: お気に入りグループ一覧を取得
+      description: お気に入りグループの一覧を取得する。
+      tags:
+        - Favorites
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [world, friend, avatar]
+          description: お気に入りタイプでフィルタ
+      responses:
+        "200":
+          description: お気に入りグループ一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FavoriteGroup"
+
+  /favorite/group/{type}/{group}/{userId}:
+    put:
+      operationId: saveFavoriteGroup
+      summary: お気に入りグループを保存
+      description: お気に入りグループの表示名や公開設定を保存する。
+      tags:
+        - Favorites
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [world, friend, avatar]
+        - name: group
+          in: path
+          required: true
+          schema:
+            type: string
+          description: グループ名
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  description: 表示名
+                visibility:
+                  type: string
+                  enum: [private, friends, public]
+                  description: 公開設定
+      responses:
+        "200":
+          description: 保存後のグループ情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteGroup"
+    delete:
+      operationId: clearFavoriteGroup
+      summary: お気に入りグループをクリア
+      description: お気に入りグループの内容をクリアする。
+      tags:
+        - Favorites
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [world, friend, avatar]
+        - name: group
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: クリア成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    Favorite:
+      type: object
+      description: お気に入り情報
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [world, friend, avatar]
+        favoriteId:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    FavoriteGroup:
+      type: object
+      description: お気に入りグループ情報
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        ownerDisplayName:
+          type: string
+        name:
+          type: string
+        displayName:
+          type: string
+        type:
+          type: string
+          enum: [world, friend, avatar]
+        visibility:
+          type: string
+          enum: [private, friends, public]
+        tags:
+          type: array
+          items:
+            type: string

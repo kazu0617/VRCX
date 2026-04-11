@@ -1,0 +1,319 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Avatars
+  description: |
+    VRChat API のアバター関連エンドポイント。
+    アバター情報の取得・更新・削除、選択、インポスター管理、ギャラリー、スタイルを含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /avatars/{avatarId}:
+    get:
+      operationId: getAvatar
+      summary: アバター情報を取得
+      description: 指定したアバターIDのアバター情報を取得する。
+      tags:
+        - Avatars
+      parameters:
+        - name: avatarId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: アバターID (avtr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+      responses:
+        "200":
+          description: アバター情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Avatar"
+        "404":
+          description: アバターが見つからない
+    put:
+      operationId: updateAvatar
+      summary: アバター情報を更新
+      description: 指定したアバターのメタデータを更新する。
+      tags:
+        - Avatars
+      parameters:
+        - name: avatarId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                releaseStatus:
+                  type: string
+                  enum: [public, private]
+                imageUrl:
+                  type: string
+      responses:
+        "200":
+          description: 更新後のアバター情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Avatar"
+    delete:
+      operationId: deleteAvatar
+      summary: アバターを削除
+      description: 指定したアバターを削除する。
+      tags:
+        - Avatars
+      parameters:
+        - name: avatarId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+
+  /avatars:
+    get:
+      operationId: getAvatars
+      summary: アバター一覧を取得
+      description: ユーザーのアバター一覧を取得する。
+      tags:
+        - Avatars
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: string
+          description: ユーザーIDでフィルタ
+        - name: n
+          in: query
+          schema:
+            type: integer
+            default: 60
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: オフセット
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ascending, descending]
+          description: ソート順
+        - name: releaseStatus
+          in: query
+          schema:
+            type: string
+            enum: [public, private]
+          description: リリースステータス
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created, updated, order, _created_at, _updated_at]
+          description: ソート基準
+      responses:
+        "200":
+          description: アバター一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Avatar"
+
+  /avatars/{avatarId}/select:
+    put:
+      operationId: selectAvatar
+      summary: アバターを選択
+      description: 指定したアバターを現在使用するアバターとして選択する。
+      tags:
+        - Avatars
+      parameters:
+        - name: avatarId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 選択後のユーザー情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /avatars/{avatarId}/selectfallback:
+    put:
+      operationId: selectFallbackAvatar
+      summary: フォールバックアバターを選択
+      description: 指定したアバターをフォールバック（代替）アバターとして選択する。
+      tags:
+        - Avatars
+      parameters:
+        - name: avatarId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 選択後のユーザー情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /avatars/{avatarId}/impostor/enqueue:
+    post:
+      operationId: createImpostor
+      summary: インポスターを作成キューに追加
+      description: 指定したアバターのインポスター（軽量版）作成をキューに追加する。
+      tags:
+        - Avatars
+      parameters:
+        - name: avatarId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: キュー追加成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /avatars/{avatarId}/impostor:
+    delete:
+      operationId: deleteImpostor
+      summary: インポスターを削除
+      description: 指定したアバターのインポスターを削除する。
+      tags:
+        - Avatars
+      parameters:
+        - name: avatarId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+
+  /avatarStyles:
+    get:
+      operationId: getAvatarStyles
+      summary: アバタースタイル一覧を取得
+      description: 利用可能なアバタースタイルの一覧を取得する。
+      tags:
+        - Avatars
+      responses:
+        "200":
+          description: アバタースタイル一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /avatars/favorites:
+    get:
+      operationId: getFavoriteAvatars
+      summary: お気に入りアバター一覧を取得
+      description: 現在のユーザーのお気に入りアバター一覧を取得する。
+      tags:
+        - Avatars
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: お気に入りアバター一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Avatar"
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    Avatar:
+      type: object
+      description: アバター情報
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        imageUrl:
+          type: string
+        thumbnailImageUrl:
+          type: string
+        releaseStatus:
+          type: string
+          enum: [public, private]
+        version:
+          type: integer
+        featured:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        unityPackages:
+          type: array
+          items:
+            type: object

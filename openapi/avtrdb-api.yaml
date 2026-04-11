@@ -1,0 +1,85 @@
+openapi: 3.0.3
+info:
+  title: AvatarDB API
+  description: |
+    AvatarDB (avtrdb.com) のアバター検索 API。
+    VRCX から VRChat アバターを外部データベースで検索するために使用される。
+  version: "3.0.0"
+
+servers:
+  - url: https://api.avtrdb.com/v3
+    description: AvatarDB API v3 (最新)
+  - url: https://api.avtrdb.com/v2
+    description: AvatarDB API v2
+  - url: https://api.avtrdb.com/v1
+    description: AvatarDB API v1
+
+paths:
+  /avatar/search/vrcx:
+    get:
+      operationId: searchAvatars
+      summary: アバターを検索 (VRCX用)
+      description: |
+        VRCX 向けのアバター検索エンドポイント。
+        アバター名やキーワードで外部データベースからアバターを検索する。
+      tags:
+        - Avatars
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: 検索キーワード
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: アバター検索結果
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvatarSearchResult"
+
+components:
+  schemas:
+    AvatarSearchResult:
+      type: object
+      description: アバター検索結果
+      properties:
+        id:
+          type: string
+          description: アバターID
+        name:
+          type: string
+          description: アバター名
+        description:
+          type: string
+          description: アバターの説明
+        authorId:
+          type: string
+          description: 作者のユーザーID
+        authorName:
+          type: string
+          description: 作者名
+        imageUrl:
+          type: string
+          description: アバター画像URL
+        thumbnailImageUrl:
+          type: string
+          description: サムネイル画像URL
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time

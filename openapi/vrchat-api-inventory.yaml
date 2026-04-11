@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: VRChat API - Inventory & Rewards
+  description: |
+    VRChat API のインベントリ・報酬関連エンドポイント。
+    インベントリアイテムの取得、バンドル消費、テンプレート取得、
+    プリント管理、報酬コード引き換えを含む。
+  version: "1.0.0"
+
+servers:
+  - url: https://api.vrchat.cloud/api/1
+    description: VRChat API Production Server
+
+security:
+  - cookieAuth: []
+
+paths:
+  /inventory:
+    get:
+      operationId: getInventoryItems
+      summary: インベントリアイテム一覧を取得
+      description: 現在のユーザーのインベントリアイテム一覧を取得する。
+      tags:
+        - Inventory
+      parameters:
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ascending, descending]
+          description: ソート順
+        - name: types
+          in: query
+          schema:
+            type: string
+          description: アイテムタイプでフィルタ
+      responses:
+        "200":
+          description: インベントリアイテム一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryItem"
+
+  /inventory/{inventoryId}:
+    get:
+      operationId: getInventoryItem
+      summary: インベントリアイテムを取得
+      description: 指定したインベントリアイテムの詳細を取得する。
+      tags:
+        - Inventory
+      parameters:
+        - name: inventoryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: インベントリアイテム情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+
+  /user/{userId}/inventory/{inventoryId}:
+    get:
+      operationId: getUserInventoryItem
+      summary: ユーザーのインベントリアイテムを取得
+      description: 指定したユーザーの特定のインベントリアイテム情報を取得する。
+      tags:
+        - Inventory
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: inventoryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: インベントリアイテム情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+
+  /inventory/{inventoryId}/consume:
+    put:
+      operationId: consumeInventoryBundle
+      summary: インベントリバンドルを消費
+      description: 指定したインベントリバンドルを消費（開封）する。
+      tags:
+        - Inventory
+      parameters:
+        - name: inventoryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 消費成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /inventory/template/{inventoryTemplateId}:
+    get:
+      operationId: getInventoryTemplate
+      summary: インベントリテンプレートを取得
+      description: 指定したインベントリテンプレートの情報を取得する。
+      tags:
+        - Inventory
+      parameters:
+        - name: inventoryTemplateId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: テンプレート情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /reward/redeem:
+    post:
+      operationId: redeemReward
+      summary: 報酬コードを引き換え
+      description: 報酬コードを使用してアイテムを引き換える。
+      tags:
+        - Inventory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+              properties:
+                code:
+                  type: string
+                  description: 報酬コード
+      responses:
+        "200":
+          description: 引き換え成功
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /prints/user/{userId}:
+    get:
+      operationId: getPrints
+      summary: プリント一覧を取得
+      description: 指定したユーザーのプリント一覧を取得する。
+      tags:
+        - Prints
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: n
+          in: query
+          schema:
+            type: integer
+          description: 取得件数
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          description: オフセット
+      responses:
+        "200":
+          description: プリント一覧
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Print"
+
+  /prints/{printId}:
+    get:
+      operationId: getPrint
+      summary: プリント情報を取得
+      description: 指定したプリントの詳細情報を取得する。
+      tags:
+        - Prints
+      parameters:
+        - name: printId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: プリント情報
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Print"
+    delete:
+      operationId: deletePrint
+      summary: プリントを削除
+      description: 指定したプリントを削除する。
+      tags:
+        - Prints
+      parameters:
+        - name: printId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 削除成功
+
+  /prints:
+    post:
+      operationId: uploadPrint
+      summary: プリントをアップロード
+      description: 新しいプリント画像をアップロードする。
+      tags:
+        - Prints
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+                - data
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: プリント画像データ
+                data:
+                  type: string
+                  description: JSON形式のメタデータ
+      responses:
+        "200":
+          description: アップロード成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Print"
+
+  /props/{propId}:
+    get:
+      operationId: getProp
+      summary: プロップ情報を取得
+      description: 指定したプロップの詳細情報を取得する。
+      tags:
+        - Inventory
+      parameters:
+        - name: propId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: プロップ情報
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: auth
+
+  schemas:
+    InventoryItem:
+      type: object
+      description: インベントリアイテム情報
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        itemType:
+          type: string
+        quantity:
+          type: integer
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    Print:
+      type: object
+      description: プリント情報
+      properties:
+        id:
+          type: string
+        ownerId:
+          type: string
+        imageUrl:
+          type: string
+        thumbnailImageUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
